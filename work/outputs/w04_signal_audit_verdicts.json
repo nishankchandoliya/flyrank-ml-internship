@@ -1,0 +1,78 @@
+{
+  "notebook": "work/notebooks/w04_signal_audit.ipynb",
+  "run_date": "2026-10-21",
+  "slices": {
+    "Mar→Apr (main)": {
+      "pages": 94496,
+      "clients": 38,
+      "base_rate": 0.5159
+    },
+    "Feb→Mar (check)": {
+      "pages": 64881,
+      "clients": 26,
+      "base_rate": 0.2484
+    }
+  },
+  "verdict_rules": {
+    "gap_points": 5,
+    "min_group_n": 50,
+    "min_client_cell_n": 30,
+    "large_client_pages": 1000
+  },
+  "verdicts": {
+    "#1 late-month slide": {
+      "claim": "pages that already slid 20%+ inside the month decline more next month",
+      "verdict": "CONFIRMED",
+      "gap_points": {
+        "Mar→Apr (main)": 29.8,
+        "Feb→Mar (check)": 20.7
+      },
+      "large_clients_agreeing": {
+        "Mar→Apr (main)": "16 of 16",
+        "Feb→Mar (check)": "6 of 7"
+      }
+    },
+    "#2 average position": {
+      "claim": "pages at position 20+ decline more often than page-one pages (1 to 10)",
+      "verdict": "MIXED",
+      "gap_points": {
+        "Mar→Apr (main)": -0.8,
+        "Feb→Mar (check)": -12.1
+      },
+      "large_clients_agreeing": {
+        "Mar→Apr (main)": "10 of 15",
+        "Feb→Mar (check)": "1 of 7"
+      }
+    },
+    "#3 days with search data": {
+      "claim": "pages with search data on under 80% of days decline more often than pages with data every day",
+      "verdict": "MIXED",
+      "gap_points": {
+        "Mar→Apr (main)": -13.5,
+        "Feb→Mar (check)": 4.1
+      },
+      "large_clients_agreeing": {
+        "Mar→Apr (main)": "2 of 15",
+        "Feb→Mar (check)": "4 of 6"
+      }
+    },
+    "flag: CTR low for its position (CTR-fix)": {
+      "claim": "pages with CTR below their position tier's median decline more often (positions 1 to 20)",
+      "verdict": "CONFIRMED",
+      "gap_points": {
+        "Mar→Apr (main)": 20.1,
+        "Feb→Mar (check)": 9.3
+      },
+      "large_clients_agreeing": {
+        "Mar→Apr (main)": "12 of 12",
+        "Feb→Mar (check)": "6 of 6"
+      }
+    },
+    "volume (quick-win, tested in W04)": {
+      "claim": "bigger pages decline more often",
+      "verdict": "OPPOSITE",
+      "source": "w04_baseline_score.ipynb"
+    }
+  },
+  "figure": "work/figures/w04_signal_audit_distributions.png"
+}
