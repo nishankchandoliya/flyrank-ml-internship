@@ -1,0 +1,76 @@
+{
+  "notebook": "work/notebooks/w04_baseline_score.ipynb",
+  "run_date": "2026-10-21",
+  "data": {
+    "release": "flyrank_pseudonymized_warehouse_release_v20260703",
+    "feature_window": "2026-03-01 to 2026-03-31",
+    "label_window": "2026-04-01 to 2026-04-30",
+    "label": "declined_next_month: April impressions per day more than 20% below March",
+    "pages": 94496,
+    "clients": 38,
+    "base_rate": 0.5159
+  },
+  "rule": {
+    "name": "sliding_with_demand",
+    "inputs": [
+      "early_per_day",
+      "late_per_day"
+    ],
+    "fires_when": "slide from 1-15 March to 16-31 March >= 20% and late-March impressions per day >= 5",
+    "score": "early-March impressions per day minus late-March impressions per day (0 when the rule does not fire)",
+    "reason_codes": [
+      "sliding_with_demand",
+      "no_rule_fired"
+    ],
+    "actions": [
+      "review_for_refresh",
+      "monitor"
+    ],
+    "pages_fired": 21855
+  },
+  "signal_verdicts": {
+    "A_volume_quick_win": "OPPOSITE",
+    "B_late_march_slide": "CONFIRMED"
+  },
+  "all_pages": {
+    "random order (DummyClassifier floor)": {
+      "P@20": 0.5143,
+      "P@50": 0.5149,
+      "P@100": 0.5141,
+      "avg precision": 0.5159,
+      "NDCG@50": 0.5159,
+      "ROC AUC": 0.5
+    },
+    "volume only (quick-win style)": {
+      "P@20": 0.3,
+      "P@50": 0.28,
+      "P@100": 0.33,
+      "avg precision": 0.4759,
+      "NDCG@50": 0.2984,
+      "ROC AUC": 0.4519
+    },
+    "my rule: sliding_with_demand": {
+      "P@20": 0.8,
+      "P@50": 0.84,
+      "P@100": 0.87,
+      "avg precision": 0.5928,
+      "NDCG@50": 0.8415,
+      "ROC AUC": 0.5955
+    }
+  },
+  "random_p50_5th_95th_percentile": [
+    0.4,
+    0.64
+  ],
+  "client_folds": {
+    "split": "GroupKFold(n_splits=5) on client_hash_id",
+    "rule_p50_per_fold": [
+      0.8,
+      0.92,
+      0.88,
+      0.7,
+      0.62
+    ],
+    "rule_p50_mean": 0.784
+  }
+}
