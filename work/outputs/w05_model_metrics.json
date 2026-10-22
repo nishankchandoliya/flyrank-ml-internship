@@ -1,0 +1,230 @@
+{
+  "notebook": "work/notebooks/w05_model.ipynb",
+  "run_date": "2026-10-22",
+  "versions": {
+    "python": "3.13.16",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "duckdb": "2.0.0"
+  },
+  "seed": 42,
+  "data": {
+    "frame": "W03 / W04 page frame",
+    "pages": 94496,
+    "clients": 38,
+    "review_pool": "late-March impressions per day >= 5 (same bar as the W04 rule)",
+    "pool_pages": 84592,
+    "pool_base_rate": 0.4973
+  },
+  "split": "GroupKFold(n_splits=5) on client_hash_id, the same folds as W04 (checked)",
+  "my_model": {
+    "name": "logistic regression",
+    "features": [
+      "imp_per_day_log",
+      "ctr_pct",
+      "avg_position",
+      "late_march_share",
+      "gsc_days"
+    ]
+  },
+  "models": {
+    "logistic regression": {
+      "features": [
+        "imp_per_day_log",
+        "ctr_pct",
+        "avg_position",
+        "late_march_share",
+        "gsc_days"
+      ]
+    },
+    "gradient boosting": {
+      "features": [
+        "imp_per_day_log",
+        "ctr_pct",
+        "avg_position",
+        "late_march_share",
+        "gsc_days"
+      ]
+    },
+    "gradient boosting + 4 extra": {
+      "features": [
+        "imp_per_day_log",
+        "ctr_pct",
+        "avg_position",
+        "late_march_share",
+        "gsc_days",
+        "ctr_gap",
+        "odd_position",
+        "feb_per_day_log",
+        "late_vs_feb_log"
+      ]
+    }
+  },
+  "mean_over_folds": {
+    "W04 rule (baseline)": {
+      "P@20": 0.85,
+      "P@50": 0.784,
+      "P@100": 0.81,
+      "avg precision": 0.5974,
+      "NDCG@50": 0.7895,
+      "ROC AUC": 0.6165
+    },
+    "gradient boosting": {
+      "P@20": 0.89,
+      "P@50": 0.888,
+      "P@100": 0.906,
+      "avg precision": 0.6994,
+      "NDCG@50": 0.8801,
+      "ROC AUC": 0.7093
+    },
+    "gradient boosting + 4 extra": {
+      "P@20": 0.89,
+      "P@50": 0.884,
+      "P@100": 0.894,
+      "avg precision": 0.6959,
+      "NDCG@50": 0.8928,
+      "ROC AUC": 0.7051
+    },
+    "logistic regression": {
+      "P@20": 0.9,
+      "P@50": 0.884,
+      "P@100": 0.864,
+      "avg precision": 0.6915,
+      "NDCG@50": 0.8884,
+      "ROC AUC": 0.7015
+    },
+    "logistic regression \u00d7 size": {
+      "P@20": 0.52,
+      "P@50": 0.552,
+      "P@100": 0.548,
+      "avg precision": 0.5171,
+      "NDCG@50": 0.5397,
+      "ROC AUC": 0.5266
+    },
+    "random order": {
+      "P@20": 0.5034,
+      "P@50": 0.5034,
+      "P@100": 0.5034,
+      "avg precision": 0.5034,
+      "NDCG@50": 0.5034,
+      "ROC AUC": 0.5
+    },
+    "slide only (no model)": {
+      "P@20": 0.78,
+      "P@50": 0.8,
+      "P@100": 0.84,
+      "avg precision": 0.6857,
+      "NDCG@50": 0.7865,
+      "ROC AUC": 0.6835
+    }
+  },
+  "p50_per_fold": {
+    "W04 rule (baseline)": [
+      0.8,
+      0.92,
+      0.88,
+      0.7,
+      0.62
+    ],
+    "gradient boosting": [
+      0.88,
+      0.94,
+      0.84,
+      0.92,
+      0.86
+    ],
+    "gradient boosting + 4 extra": [
+      0.98,
+      0.94,
+      0.84,
+      0.84,
+      0.82
+    ],
+    "logistic regression": [
+      0.98,
+      0.96,
+      0.92,
+      0.82,
+      0.74
+    ],
+    "logistic regression \u00d7 size": [
+      0.32,
+      0.68,
+      0.74,
+      0.54,
+      0.48
+    ],
+    "random order": [
+      0.405,
+      0.708,
+      0.467,
+      0.407,
+      0.53
+    ],
+    "slide only (no model)": [
+      0.96,
+      0.98,
+      0.78,
+      0.78,
+      0.5
+    ]
+  },
+  "top50_profile": {
+    "W04 rule (baseline)": {
+      "declined (hindsight)": 0.784,
+      "median impressions per day (March)": 872.871,
+      "median clicks per day (March)": 0.871,
+      "share with 0 clicks in March": 0.036,
+      "median slide %": 51.7988,
+      "surge ended: late March at or above Feb level": 0.4921,
+      "pages with a Feb level": 189.0,
+      "biggest single-client share of a fold's top 50": 0.84,
+      "impressions per day lost by April, sum per fold (hindsight)": 21121.1542
+    },
+    "logistic regression": {
+      "declined (hindsight)": 0.884,
+      "median impressions per day (March)": 32.1452,
+      "median clicks per day (March)": 0.0,
+      "share with 0 clicks in March": 0.608,
+      "median slide %": 85.3174,
+      "surge ended: late March at or above Feb level": 0.1825,
+      "pages with a Feb level": 137.0,
+      "biggest single-client share of a fold's top 50": 0.572,
+      "impressions per day lost by April, sum per fold (hindsight)": 1093.68
+    },
+    "gradient boosting": {
+      "declined (hindsight)": 0.888,
+      "median impressions per day (March)": 43.4839,
+      "median clicks per day (March)": 0.0,
+      "share with 0 clicks in March": 0.512,
+      "median slide %": 77.6973,
+      "surge ended: late March at or above Feb level": 0.2222,
+      "pages with a Feb level": 171.0,
+      "biggest single-client share of a fold's top 50": 0.724,
+      "impressions per day lost by April, sum per fold (hindsight)": 4082.6258
+    },
+    "gradient boosting + 4 extra": {
+      "declined (hindsight)": 0.884,
+      "median impressions per day (March)": 49.7419,
+      "median clicks per day (March)": 0.0323,
+      "share with 0 clicks in March": 0.464,
+      "median slide %": 77.0804,
+      "surge ended: late March at or above Feb level": 0.1988,
+      "pages with a Feb level": 161.0,
+      "biggest single-client share of a fold's top 50": 0.688,
+      "impressions per day lost by April, sum per fold (hindsight)": 3430.2832
+    },
+    "logistic regression \u00d7 size": {
+      "declined (hindsight)": 0.552,
+      "median impressions per day (March)": 1925.0806,
+      "median clicks per day (March)": 2.5484,
+      "share with 0 clicks in March": 0.004,
+      "median slide %": 8.8992,
+      "surge ended: late March at or above Feb level": 0.8056,
+      "pages with a Feb level": 216.0,
+      "biggest single-client share of a fold's top 50": 0.876,
+      "impressions per day lost by April, sum per fold (hindsight)": 17217.3168
+    }
+  }
+}
