@@ -1,0 +1,513 @@
+{
+  "notebook": "work/notebooks/w06_validation_audit.ipynb",
+  "run_date": "2026-10-23",
+  "versions": {
+    "python": "3.13.17",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "duckdb": "2.0.0"
+  },
+  "seed": 42,
+  "model": {
+    "name": "logistic regression",
+    "features": [
+      "imp_per_day_log",
+      "ctr_pct",
+      "avg_position",
+      "late_half_share",
+      "gsc_days"
+    ],
+    "check_model": "gradient boosting",
+    "note": "W05 model unchanged (late_half_share = W05 late_march_share)"
+  },
+  "slices": {
+    "Feb→Mar": {
+      "pages": 64881,
+      "clients": 26,
+      "base_rate": 0.2484,
+      "pool_pages": 60290,
+      "pool_base_rate": 0.2402
+    },
+    "Mar→Apr": {
+      "pages": 94496,
+      "clients": 38,
+      "base_rate": 0.5159,
+      "pool_pages": 84592,
+      "pool_base_rate": 0.4973
+    },
+    "Apr→May": {
+      "pages": 99868,
+      "clients": 44,
+      "base_rate": 0.5835,
+      "pool_pages": 84691,
+      "pool_base_rate": 0.5729
+    }
+  },
+  "designs": {
+    "A": "random rows (reference)",
+    "B": "grouped by client (W05, before)",
+    "C": "time-aware (after)",
+    "D": "time-aware + grouped (after, strictest)"
+  },
+  "mar_apr_test": {
+    "mean_over_folds": {
+      "random order": {
+        "P@20": 0.5034,
+        "P@50": 0.5034,
+        "P@100": 0.5034,
+        "avg precision": 0.5034,
+        "NDCG@50": 0.5034,
+        "ROC AUC": 0.5,
+        "P@50 minus random": 0.0
+      },
+      "W04 rule (baseline)": {
+        "P@20": 0.85,
+        "P@50": 0.784,
+        "P@100": 0.81,
+        "avg precision": 0.5974,
+        "NDCG@50": 0.7895,
+        "ROC AUC": 0.6165,
+        "P@50 minus random": 0.2806
+      },
+      "slide only (no model)": {
+        "P@20": 0.78,
+        "P@50": 0.8,
+        "P@100": 0.84,
+        "avg precision": 0.6857,
+        "NDCG@50": 0.7865,
+        "ROC AUC": 0.6835,
+        "P@50 minus random": 0.2966
+      },
+      "logistic regression, A": {
+        "P@20": 0.88,
+        "P@50": 0.88,
+        "P@100": 0.872,
+        "avg precision": 0.695,
+        "NDCG@50": 0.8767,
+        "ROC AUC": 0.7054,
+        "P@50 minus random": 0.3766
+      },
+      "logistic regression, B": {
+        "P@20": 0.9,
+        "P@50": 0.884,
+        "P@100": 0.864,
+        "avg precision": 0.6915,
+        "NDCG@50": 0.8884,
+        "ROC AUC": 0.7015,
+        "P@50 minus random": 0.3806
+      },
+      "logistic regression, C": {
+        "P@20": 0.77,
+        "P@50": 0.748,
+        "P@100": 0.806,
+        "avg precision": 0.6633,
+        "NDCG@50": 0.7593,
+        "ROC AUC": 0.6639,
+        "P@50 minus random": 0.2446
+      },
+      "logistic regression, D": {
+        "P@20": 0.8,
+        "P@50": 0.776,
+        "P@100": 0.802,
+        "avg precision": 0.6607,
+        "NDCG@50": 0.7776,
+        "ROC AUC": 0.6608,
+        "P@50 minus random": 0.2726
+      },
+      "gradient boosting, A": {
+        "P@20": 0.91,
+        "P@50": 0.896,
+        "P@100": 0.896,
+        "avg precision": 0.7214,
+        "NDCG@50": 0.8966,
+        "ROC AUC": 0.7333,
+        "P@50 minus random": 0.3926
+      },
+      "gradient boosting, B": {
+        "P@20": 0.89,
+        "P@50": 0.888,
+        "P@100": 0.906,
+        "avg precision": 0.6994,
+        "NDCG@50": 0.8801,
+        "ROC AUC": 0.7093,
+        "P@50 minus random": 0.3846
+      },
+      "gradient boosting, C": {
+        "P@20": 0.85,
+        "P@50": 0.864,
+        "P@100": 0.848,
+        "avg precision": 0.6672,
+        "NDCG@50": 0.8566,
+        "ROC AUC": 0.6702,
+        "P@50 minus random": 0.3606
+      },
+      "gradient boosting, D": {
+        "P@20": 0.75,
+        "P@50": 0.76,
+        "P@100": 0.784,
+        "avg precision": 0.6517,
+        "NDCG@50": 0.7787,
+        "ROC AUC": 0.6561,
+        "P@50 minus random": 0.2566
+      }
+    },
+    "p50_per_fold": {
+      "random order": [
+        0.405,
+        0.708,
+        0.467,
+        0.407,
+        0.53
+      ],
+      "W04 rule (baseline)": [
+        0.8,
+        0.92,
+        0.88,
+        0.7,
+        0.62
+      ],
+      "slide only (no model)": [
+        0.96,
+        0.98,
+        0.78,
+        0.78,
+        0.5
+      ],
+      "logistic regression, A": [
+        0.98,
+        0.98,
+        0.9,
+        0.84,
+        0.7
+      ],
+      "logistic regression, B": [
+        0.98,
+        0.96,
+        0.92,
+        0.82,
+        0.74
+      ],
+      "logistic regression, C": [
+        0.94,
+        0.94,
+        0.76,
+        0.68,
+        0.42
+      ],
+      "logistic regression, D": [
+        0.96,
+        0.96,
+        0.8,
+        0.78,
+        0.38
+      ],
+      "gradient boosting, A": [
+        0.92,
+        0.92,
+        0.88,
+        0.88,
+        0.88
+      ],
+      "gradient boosting, B": [
+        0.88,
+        0.94,
+        0.84,
+        0.92,
+        0.86
+      ],
+      "gradient boosting, C": [
+        0.98,
+        0.96,
+        0.88,
+        0.9,
+        0.6
+      ],
+      "gradient boosting, D": [
+        0.98,
+        0.96,
+        0.54,
+        0.84,
+        0.48
+      ]
+    }
+  },
+  "apr_may_test": {
+    "mean_over_folds": {
+      "random order": {
+        "P@20": 0.5811,
+        "P@50": 0.5811,
+        "P@100": 0.5811,
+        "avg precision": 0.5811,
+        "NDCG@50": 0.5811,
+        "ROC AUC": 0.5,
+        "P@50 minus random": 0.0
+      },
+      "W04 rule (baseline)": {
+        "P@20": 0.89,
+        "P@50": 0.884,
+        "P@100": 0.88,
+        "avg precision": 0.7125,
+        "NDCG@50": 0.8901,
+        "ROC AUC": 0.6661,
+        "P@50 minus random": 0.3029
+      },
+      "slide only (no model)": {
+        "P@20": 1.0,
+        "P@50": 0.98,
+        "P@100": 0.974,
+        "avg precision": 0.7712,
+        "NDCG@50": 0.9842,
+        "ROC AUC": 0.6883,
+        "P@50 minus random": 0.3989
+      },
+      "logistic regression, B": {
+        "P@20": 0.98,
+        "P@50": 0.964,
+        "P@100": 0.944,
+        "avg precision": 0.7718,
+        "NDCG@50": 0.9707,
+        "ROC AUC": 0.7085,
+        "P@50 minus random": 0.3829
+      },
+      "logistic regression, C": {
+        "P@20": 1.0,
+        "P@50": 0.988,
+        "P@100": 0.968,
+        "avg precision": 0.765,
+        "NDCG@50": 0.9912,
+        "ROC AUC": 0.6939,
+        "P@50 minus random": 0.4069
+      },
+      "logistic regression, D": {
+        "P@20": 1.0,
+        "P@50": 0.988,
+        "P@100": 0.97,
+        "avg precision": 0.763,
+        "NDCG@50": 0.991,
+        "ROC AUC": 0.6927,
+        "P@50 minus random": 0.4069
+      },
+      "gradient boosting, B": {
+        "P@20": 1.0,
+        "P@50": 0.976,
+        "P@100": 0.97,
+        "avg precision": 0.7992,
+        "NDCG@50": 0.9818,
+        "ROC AUC": 0.7394,
+        "P@50 minus random": 0.3949
+      },
+      "gradient boosting, C": {
+        "P@20": 0.99,
+        "P@50": 0.992,
+        "P@100": 0.978,
+        "avg precision": 0.7805,
+        "NDCG@50": 0.9914,
+        "ROC AUC": 0.699,
+        "P@50 minus random": 0.4109
+      },
+      "gradient boosting, D": {
+        "P@20": 0.96,
+        "P@50": 0.956,
+        "P@100": 0.966,
+        "avg precision": 0.7785,
+        "NDCG@50": 0.9628,
+        "ROC AUC": 0.6968,
+        "P@50 minus random": 0.3749
+      }
+    },
+    "p50_per_fold": {
+      "random order": [
+        0.397,
+        0.591,
+        0.595,
+        0.631,
+        0.691
+      ],
+      "W04 rule (baseline)": [
+        0.74,
+        0.96,
+        0.94,
+        0.86,
+        0.92
+      ],
+      "slide only (no model)": [
+        0.96,
+        0.96,
+        1.0,
+        1.0,
+        0.98
+      ],
+      "logistic regression, B": [
+        0.94,
+        0.94,
+        1.0,
+        0.96,
+        0.98
+      ],
+      "logistic regression, C": [
+        0.98,
+        0.98,
+        1.0,
+        0.98,
+        1.0
+      ],
+      "logistic regression, D": [
+        0.98,
+        0.98,
+        1.0,
+        0.98,
+        1.0
+      ],
+      "gradient boosting, B": [
+        1.0,
+        0.96,
+        0.94,
+        1.0,
+        0.98
+      ],
+      "gradient boosting, C": [
+        1.0,
+        0.98,
+        1.0,
+        1.0,
+        0.98
+      ],
+      "gradient boosting, D": [
+        0.88,
+        1.0,
+        0.98,
+        0.96,
+        0.96
+      ]
+    }
+  },
+  "leak_trap": {
+    "1. honest: the 5 features": {
+      "P@50": 0.884,
+      "avg precision": 0.6915,
+      "ROC AUC": 0.7015,
+      "random order (base rate)": 0.5034
+    },
+    "2. + April 1-7 impressions (inside the label window)": {
+      "P@50": 0.96,
+      "avg precision": 0.889,
+      "ROC AUC": 0.899,
+      "random order (base rate)": 0.5034
+    },
+    "3. + Feb-Apr impressions per day (window overlaps the label)": {
+      "P@50": 1.0,
+      "avg precision": 0.8857,
+      "ROC AUC": 0.8854,
+      "random order (base rate)": 0.5034
+    },
+    "4. + days visible Feb-Apr (window overlaps the label)": {
+      "P@50": 0.932,
+      "avg precision": 0.694,
+      "ROC AUC": 0.7051,
+      "random order (base rate)": 0.5034
+    },
+    "5. traps deleted: the 5 features again": {
+      "P@50": 0.884,
+      "avg precision": 0.6915,
+      "ROC AUC": 0.7015,
+      "random order (base rate)": 0.5034
+    }
+  },
+  "drop_one_feature": {
+    "all 5 features": {
+      "P@50": 0.884,
+      "avg precision": 0.6915,
+      "ROC AUC": 0.7015,
+      "P@50 change": 0.0
+    },
+    "without imp_per_day_log": {
+      "P@50": 0.844,
+      "avg precision": 0.6985,
+      "ROC AUC": 0.7012,
+      "P@50 change": -0.04
+    },
+    "without ctr_pct": {
+      "P@50": 0.796,
+      "avg precision": 0.6763,
+      "ROC AUC": 0.6844,
+      "P@50 change": -0.088
+    },
+    "without avg_position": {
+      "P@50": 0.884,
+      "avg precision": 0.6914,
+      "ROC AUC": 0.7009,
+      "P@50 change": 0.0
+    },
+    "without late_half_share": {
+      "P@50": 0.652,
+      "avg precision": 0.598,
+      "ROC AUC": 0.6259,
+      "P@50 change": -0.232
+    },
+    "without gsc_days": {
+      "P@50": 0.88,
+      "avg precision": 0.693,
+      "ROC AUC": 0.703,
+      "P@50 change": -0.004
+    }
+  },
+  "carry_over_share": {
+    "all declined pages in the pool": 0.1343,
+    "hits in the top 50s: logistic regression, B (W05)": 0.4299,
+    "hits in the top 50s: logistic regression, D": 0.3608,
+    "hits in the top 50s: W04 rule (baseline)": 0.4541,
+    "hits in the top 50s: slide only (no model)": 0.515
+  },
+  "stricter_label": {
+    "name": "fell_after_decision",
+    "pool_base_rate": 0.5006,
+    "mean_over_folds": {
+      "random order": {
+        "P@50": 0.5079,
+        "avg precision": 0.5079,
+        "ROC AUC": 0.5
+      },
+      "W04 rule (baseline)": {
+        "P@50": 0.428,
+        "avg precision": 0.5017,
+        "ROC AUC": 0.4918
+      },
+      "slide only (no model)": {
+        "P@50": 0.388,
+        "avg precision": 0.5097,
+        "ROC AUC": 0.4984
+      },
+      "logistic regression, B": {
+        "P@50": 0.504,
+        "avg precision": 0.5412,
+        "ROC AUC": 0.5495
+      },
+      "logistic regression, D": {
+        "P@50": 0.496,
+        "avg precision": 0.5431,
+        "ROC AUC": 0.5408
+      },
+      "gradient boosting, B": {
+        "P@50": 0.548,
+        "avg precision": 0.5514,
+        "ROC AUC": 0.5671
+      },
+      "gradient boosting, D": {
+        "P@50": 0.464,
+        "avg precision": 0.5361,
+        "ROC AUC": 0.5429
+      },
+      "logistic regression, B, trained on the stricter label": {
+        "P@50": 0.756,
+        "avg precision": 0.5885,
+        "ROC AUC": 0.5993
+      }
+    }
+  },
+  "rule_4_removed_pages": {
+    "Feb→Mar": 7,
+    "Mar→Apr": 0,
+    "Apr→May": 0
+  }
+}
