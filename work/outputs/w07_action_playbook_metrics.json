@@ -1,0 +1,599 @@
+{
+  "notebook": "work/notebooks/w07_action_playbook.ipynb",
+  "run_date": "2026-10-24",
+  "versions": {
+    "python": "3.13.17",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "duckdb": "2.0.0",
+    "matplotlib": "3.11.2"
+  },
+  "seed": 42,
+  "decision_days": {
+    "31 March": {
+      "feature_month": "2026-03",
+      "label_month_hindsight": "2026-04",
+      "previous_month": "2026-02",
+      "model_trained_on": "Feb→Mar"
+    },
+    "30 April": {
+      "feature_month": "2026-04",
+      "label_month_hindsight": "2026-05",
+      "previous_month": "2026-03",
+      "model_trained_on": "Mar→Apr"
+    }
+  },
+  "sealed_month": "2026-06, never read",
+  "playbook": {
+    "reason": "frozen W04 rule sliding_with_demand (else NO_FLAG)",
+    "order": "model score x clicks at stake per day; rows that need a person first",
+    "model": {
+      "name": "logistic regression",
+      "features": [
+        "imp_per_day_log",
+        "ctr_pct",
+        "avg_position",
+        "late_half_share",
+        "gsc_days"
+      ],
+      "training": "previous slice review pool, all clients (W06 design C)"
+    },
+    "clicks_at_stake": "previous-month clicks per day minus second-half clicks per day, floored at 0",
+    "cuts": {
+      "below_normal": 0.8,
+      "spike_share": 0.3,
+      "site_drop": 0.8,
+      "min_slide_pct": 20,
+      "min_late_per_day": 5,
+      "ctr_tiers": [
+        1,
+        3,
+        10,
+        20
+      ],
+      "batch": 50
+    }
+  },
+  "policies": {
+    "no automatic rewrite, prune, redirect or noindex, ever": {
+      "status": "by design",
+      "where": "the notebook writes a CSV and nothing else. No step touches a site"
+    },
+    "pages under 100 impressions a month stay out": {
+      "status": "upstream",
+      "where": "W03 data contract (rule 3 of the frame)"
+    },
+    "pages under 5 impressions a day in the second half stay out": {
+      "status": "asserted",
+      "where": "W05 review pool, checked in build_playbook"
+    },
+    "new pages (no full previous month) stay out: wait_and_recheck": {
+      "status": "asserted",
+      "where": "assert in the playbook cell"
+    },
+    "surge ended (rule fired, back to normal): monitor_only, never a rewrite": {
+      "status": "asserted",
+      "where": "assert in the playbook cell"
+    },
+    "one-day spikes (30%+ of the first half): verify_then_review first": {
+      "status": "asserted",
+      "where": "assert in the playbook cell"
+    },
+    "whole client down 20%+: site_check_first, one ticket per client": {
+      "status": "asserted",
+      "where": "site_drop gate in build_playbook"
+    },
+    "more than 10 batch rows from one client: one site-level look first": {
+      "status": "proposed",
+      "where": "printed below for the batch, not enforced in code"
+    },
+    "pages edited in the last 8 weeks stay out": {
+      "status": "proposed",
+      "where": "needs an edit-history join; dim_content is a July snapshot (W03), so not built"
+    }
+  },
+  "action_counts": {
+    "31 March": {
+      "review_for_refresh": 8542,
+      "investigate_quiet_risk": 16529,
+      "verify_then_review": 377,
+      "site_check_first": 24,
+      "monitor_only": 8373,
+      "no_action": 29678,
+      "wait_and_recheck": 21069,
+      "not_in_review_pool": 9904
+    },
+    "30 April": {
+      "review_for_refresh": 14430,
+      "investigate_quiet_risk": 11003,
+      "verify_then_review": 671,
+      "site_check_first": 13998,
+      "monitor_only": 8510,
+      "no_action": 25322,
+      "wait_and_recheck": 10757,
+      "not_in_review_pool": 15177
+    }
+  },
+  "first_batch_actions": {
+    "31 March": {
+      "investigate_quiet_risk": 25,
+      "review_for_refresh": 23,
+      "verify_then_review": 2
+    },
+    "30 April": {
+      "review_for_refresh": 28,
+      "site_check_first": 9,
+      "investigate_quiet_risk": 8,
+      "verify_then_review": 5
+    }
+  },
+  "precision_at_k_fold_mean": {
+    "31 March": {
+      "random order (base rate)": {
+        "10": 0.5034,
+        "20": 0.5034,
+        "30": 0.5034,
+        "50": 0.5034,
+        "75": 0.5034,
+        "100": 0.5034,
+        "150": 0.5034,
+        "200": 0.5034
+      },
+      "queue model (time-aware, C)": {
+        "10": 0.8,
+        "20": 0.77,
+        "30": 0.7533,
+        "50": 0.748,
+        "75": 0.792,
+        "100": 0.806,
+        "150": 0.824,
+        "200": 0.831
+      },
+      "same model, test clients held out (D)": {
+        "10": 0.8,
+        "20": 0.8,
+        "30": 0.7733,
+        "50": 0.776,
+        "75": 0.7867,
+        "100": 0.802,
+        "150": 0.8267,
+        "200": 0.836
+      },
+      "W04 rule (frozen)": {
+        "10": 0.78,
+        "20": 0.85,
+        "30": 0.8067,
+        "50": 0.784,
+        "75": 0.8,
+        "100": 0.81,
+        "150": 0.796,
+        "200": 0.801
+      },
+      "slide only (no model)": {
+        "10": 0.74,
+        "20": 0.78,
+        "30": 0.7867,
+        "50": 0.8,
+        "75": 0.8267,
+        "100": 0.84,
+        "150": 0.844,
+        "200": 0.842
+      }
+    },
+    "30 April": {
+      "random order (base rate)": {
+        "10": 0.5811,
+        "20": 0.5811,
+        "30": 0.5811,
+        "50": 0.5811,
+        "75": 0.5811,
+        "100": 0.5811,
+        "150": 0.5811,
+        "200": 0.5811
+      },
+      "queue model (time-aware, C)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.9933,
+        "50": 0.988,
+        "75": 0.9787,
+        "100": 0.968,
+        "150": 0.9653,
+        "200": 0.964
+      },
+      "same model, test clients held out (D)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.9933,
+        "50": 0.988,
+        "75": 0.9733,
+        "100": 0.97,
+        "150": 0.964,
+        "200": 0.965
+      },
+      "W04 rule (frozen)": {
+        "10": 0.88,
+        "20": 0.89,
+        "30": 0.8933,
+        "50": 0.884,
+        "75": 0.88,
+        "100": 0.88,
+        "150": 0.872,
+        "200": 0.864
+      },
+      "slide only (no model)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.98,
+        "50": 0.98,
+        "75": 0.9787,
+        "100": 0.974,
+        "150": 0.9667,
+        "200": 0.959
+      }
+    }
+  },
+  "decay_insight": {
+    "31 March | slid, below its normal level": {
+      "pages": 8741.0,
+      "share of pool": 0.1033,
+      "declined (W03 label)": 0.7228,
+      "fell another 20% (strict)": 0.4613,
+      "still below normal next month": 0.8388,
+      "back above this month's level": 0.1601,
+      "median clicks a day": 0.0323
+    },
+    "31 March | slid, back to normal (surge ended)": {
+      "pages": 8373.0,
+      "share of pool": 0.099,
+      "declined (W03 label)": 0.7123,
+      "fell another 20% (strict)": 0.5002,
+      "still below normal next month": 0.4074,
+      "back above this month's level": 0.1567,
+      "median clicks a day": 0.0645
+    },
+    "31 March | no slide, already below normal": {
+      "pages": 6015.0,
+      "share of pool": 0.0711,
+      "declined (W03 label)": 0.4118,
+      "fell another 20% (strict)": 0.4263,
+      "still below normal next month": 0.7987,
+      "back above this month's level": 0.3963,
+      "median clicks a day": 0.0323
+    },
+    "31 March | no slide, at or above normal": {
+      "pages": 40394.0,
+      "share of pool": 0.4775,
+      "declined (W03 label)": 0.441,
+      "fell another 20% (strict)": 0.5222,
+      "still below normal next month": 0.272,
+      "back above this month's level": 0.3865,
+      "median clicks a day": 0.0645
+    },
+    "31 March | young page, slid": {
+      "pages": 4741.0,
+      "share of pool": 0.056,
+      "declined (W03 label)": 0.715,
+      "fell another 20% (strict)": 0.5149,
+      "still below normal next month": null,
+      "back above this month's level": 0.1822,
+      "median clicks a day": 0.0323
+    },
+    "31 March | young page, no slide": {
+      "pages": 16328.0,
+      "share of pool": 0.193,
+      "declined (W03 label)": 0.374,
+      "fell another 20% (strict)": 0.492,
+      "still below normal next month": null,
+      "back above this month's level": 0.4882,
+      "median clicks a day": 0.0645
+    },
+    "30 April | slid, below its normal level": {
+      "pages": 24005.0,
+      "share of pool": 0.2834,
+      "declined (W03 label)": 0.7531,
+      "fell another 20% (strict)": 0.488,
+      "still below normal next month": 0.9086,
+      "back above this month's level": 0.1271,
+      "median clicks a day": 0.0333
+    },
+    "30 April | slid, back to normal (surge ended)": {
+      "pages": 8510.0,
+      "share of pool": 0.1005,
+      "declined (W03 label)": 0.6613,
+      "fell another 20% (strict)": 0.4698,
+      "still below normal next month": 0.3666,
+      "back above this month's level": 0.1877,
+      "median clicks a day": 0.0667
+    },
+    "30 April | no slide, already below normal": {
+      "pages": 11123.0,
+      "share of pool": 0.1313,
+      "declined (W03 label)": 0.4795,
+      "fell another 20% (strict)": 0.4861,
+      "still below normal next month": 0.8674,
+      "back above this month's level": 0.3187,
+      "median clicks a day": 0.0333
+    },
+    "30 April | no slide, at or above normal": {
+      "pages": 30296.0,
+      "share of pool": 0.3577,
+      "declined (W03 label)": 0.4344,
+      "fell another 20% (strict)": 0.4922,
+      "still below normal next month": 0.2841,
+      "back above this month's level": 0.3654,
+      "median clicks a day": 0.0667
+    },
+    "30 April | young page, slid": {
+      "pages": 3480.0,
+      "share of pool": 0.0411,
+      "declined (W03 label)": 0.8198,
+      "fell another 20% (strict)": 0.6155,
+      "still below normal next month": null,
+      "back above this month's level": 0.1112,
+      "median clicks a day": 0.0333
+    },
+    "30 April | young page, no slide": {
+      "pages": 7277.0,
+      "share of pool": 0.0859,
+      "declined (W03 label)": 0.4756,
+      "fell another 20% (strict)": 0.5769,
+      "still below normal next month": null,
+      "back above this month's level": 0.405,
+      "median clicks a day": 0.0667
+    }
+  },
+  "batch_value": {
+    "31 March | playbook: model score x clicks at stake": {
+      "declined (W03 label)": 0.5,
+      "fell another 20% (strict)": 0.36,
+      "still below normal next month": 0.88,
+      "clicks a day at stake on the day": 491.8661,
+      "clicks a day still lost next month": 553.0952,
+      "rows with 0 clicks this month": 0.0,
+      "biggest single-client share": 0.4
+    },
+    "31 March | model score only": {
+      "declined (W03 label)": 0.84,
+      "fell another 20% (strict)": 0.56,
+      "still below normal next month": 0.82,
+      "clicks a day at stake on the day": 2.8036,
+      "clicks a day still lost next month": 1.881,
+      "rows with 0 clicks this month": 0.52,
+      "biggest single-client share": 0.44
+    },
+    "31 March | clicks at stake only (no model)": {
+      "declined (W03 label)": 0.42,
+      "fell another 20% (strict)": 0.3,
+      "still below normal next month": 0.76,
+      "clicks a day at stake on the day": 507.9732,
+      "clicks a day still lost next month": 546.3024,
+      "rows with 0 clicks this month": 0.0,
+      "biggest single-client share": 0.44
+    },
+    "31 March | W04 rule (frozen)": {
+      "declined (W03 label)": 0.92,
+      "fell another 20% (strict)": 0.44,
+      "still below normal next month": 0.82,
+      "clicks a day at stake on the day": 38.4911,
+      "clicks a day still lost next month": 45.8333,
+      "rows with 0 clicks this month": 0.02,
+      "biggest single-client share": 0.44
+    },
+    "31 March | slide only (no model)": {
+      "declined (W03 label)": 0.98,
+      "fell another 20% (strict)": 0.54,
+      "still below normal next month": 0.96,
+      "clicks a day at stake on the day": 5.5,
+      "clicks a day still lost next month": 5.7595,
+      "rows with 0 clicks this month": 0.34,
+      "biggest single-client share": 0.7
+    },
+    "30 April | playbook: model score x clicks at stake": {
+      "declined (W03 label)": 0.88,
+      "fell another 20% (strict)": 0.56,
+      "still below normal next month": 0.98,
+      "clicks a day at stake on the day": 487.1785,
+      "clicks a day still lost next month": 527.4194,
+      "rows with 0 clicks this month": 0.04,
+      "biggest single-client share": 0.28
+    },
+    "30 April | model score only": {
+      "declined (W03 label)": 1.0,
+      "fell another 20% (strict)": 0.46,
+      "still below normal next month": 0.96,
+      "clicks a day at stake on the day": 2.5462,
+      "clicks a day still lost next month": 2.0323,
+      "rows with 0 clicks this month": 0.66,
+      "biggest single-client share": 0.28
+    },
+    "30 April | clicks at stake only (no model)": {
+      "declined (W03 label)": 0.78,
+      "fell another 20% (strict)": 0.64,
+      "still below normal next month": 0.94,
+      "clicks a day at stake on the day": 524.9505,
+      "clicks a day still lost next month": 585.4839,
+      "rows with 0 clicks this month": 0.02,
+      "biggest single-client share": 0.3
+    },
+    "30 April | W04 rule (frozen)": {
+      "declined (W03 label)": 0.9,
+      "fell another 20% (strict)": 0.6,
+      "still below normal next month": 0.9,
+      "clicks a day at stake on the day": 114.3054,
+      "clicks a day still lost next month": 105.0323,
+      "rows with 0 clicks this month": 0.04,
+      "biggest single-client share": 0.24
+    },
+    "30 April | slide only (no model)": {
+      "declined (W03 label)": 1.0,
+      "fell another 20% (strict)": 0.48,
+      "still below normal next month": 1.0,
+      "clicks a day at stake on the day": 49.6882,
+      "clicks a day still lost next month": 49.0645,
+      "rows with 0 clicks this month": 0.2,
+      "biggest single-client share": 0.42
+    }
+  },
+  "value_scenario": {
+    "review_minutes_assumption": 20,
+    "31 March | model score only": {
+      "extra labeled decliners in the batch": -17.0,
+      "extra clicks a day still lost, found by the batch": 551.2143
+    },
+    "31 March | W04 rule (frozen)": {
+      "extra labeled decliners in the batch": -21.0,
+      "extra clicks a day still lost, found by the batch": 507.2619
+    },
+    "30 April | model score only": {
+      "extra labeled decliners in the batch": -6.0,
+      "extra clicks a day still lost, found by the batch": 525.3871
+    },
+    "30 April | W04 rule (frozen)": {
+      "extra labeled decliners in the batch": -1.0,
+      "extra clicks a day still lost, found by the batch": 422.3871
+    }
+  },
+  "monitoring": {
+    "thresholds_proposed": {
+      "pool size change vs last run": 0.25,
+      "feature PSI": 0.25,
+      "share of pool pages off the queue as young": 0.25,
+      "clients with a site-wide drop": 1,
+      "biggest single-client share of the batch": 0.5,
+      "base-rate move vs the training month": 0.1,
+      "batch still below normal next month (floor)": 0.7
+    },
+    "pre_release": {
+      "31 March": {
+        "pages in the frame": 94496.0,
+        "clients in the frame": 38.0,
+        "pool size change vs last run": 0.4031,
+        "schema: features complete in the pool": true,
+        "schema: no label column in the playbook": true,
+        "PSI imp_per_day_log": 0.01,
+        "PSI ctr_pct": 0.0088,
+        "PSI avg_position": 0.1053,
+        "PSI late_half_share": 0.0774,
+        "PSI gsc_days": 0.264,
+        "share of pool pages off the queue as young": 0.2491,
+        "clients with a site-wide drop": 3.0,
+        "biggest single-client share of the batch": 0.4
+      },
+      "30 April": {
+        "pages in the frame": 99868.0,
+        "clients in the frame": 44.0,
+        "pool size change vs last run": 0.0012,
+        "schema: features complete in the pool": true,
+        "schema: no label column in the playbook": true,
+        "PSI imp_per_day_log": 0.0126,
+        "PSI ctr_pct": 0.0027,
+        "PSI avg_position": 0.0483,
+        "PSI late_half_share": 0.3295,
+        "PSI gsc_days": 0.0271,
+        "share of pool pages off the queue as young": 0.127,
+        "clients with a site-wide drop": 11.0,
+        "biggest single-client share of the batch": 0.28
+      }
+    },
+    "post_label": {
+      "31 March": {
+        "pool base rate, training month": 0.2402,
+        "pool base rate, this run": 0.4973,
+        "base-rate move vs the training month": 0.2572,
+        "model P@50 (C, fold mean)": 0.748,
+        "frozen rule P@50 (fold mean)": 0.784,
+        "slide only P@50 (fold mean)": 0.8,
+        "batch still below normal next month": 0.88,
+        "batch clicks a day still lost next month": 553.0952,
+        "clicks-only order: still below normal": 0.76
+      },
+      "30 April": {
+        "pool base rate, training month": 0.4973,
+        "pool base rate, this run": 0.5729,
+        "base-rate move vs the training month": 0.0755,
+        "model P@50 (C, fold mean)": 0.988,
+        "frozen rule P@50 (fold mean)": 0.884,
+        "slide only P@50 (fold mean)": 0.98,
+        "batch still below normal next month": 0.98,
+        "batch clicks a day still lost next month": 527.4194,
+        "clicks-only order: still below normal": 0.94
+      }
+    },
+    "triggers": {
+      "pre-release | pool size moved more than 25% vs last run": {
+        "31 March: value": 0.403,
+        "31 March: fired": true,
+        "30 April: value": 0.001,
+        "30 April: fired": false,
+        "if it fires": "check the pipeline and the new clients before release"
+      },
+      "pre-release | a feature PSI above 0.25 vs last run": {
+        "31 March: value": 0.264,
+        "31 March: fired": true,
+        "30 April: value": 0.329,
+        "30 April: fired": true,
+        "if it fires": "hold the release until a person reads the drift"
+      },
+      "pre-release | more than 25% of pool pages are young": {
+        "31 March: value": 0.249,
+        "31 March: fired": false,
+        "30 April: value": 0.127,
+        "30 April: fired": false,
+        "if it fires": "expect a thin queue for new clients and say so in the release note"
+      },
+      "pre-release | at least one client with a site-wide drop": {
+        "31 March: value": 3.0,
+        "31 March: fired": true,
+        "30 April: value": 11.0,
+        "30 April: fired": true,
+        "if it fires": "open one site ticket per client before page work"
+      },
+      "pre-release | one client holds more than half of the batch": {
+        "31 March: value": 0.4,
+        "31 March: fired": false,
+        "30 April: value": 0.28,
+        "30 April: fired": false,
+        "if it fires": "look at the site first, then spread the batch"
+      },
+      "post-label | base rate moved more than 0.10 vs the training month": {
+        "31 March: value": 0.257,
+        "31 March: fired": true,
+        "30 April: value": 0.076,
+        "30 April: fired": false,
+        "if it fires": "pause the NEXT release for review (it cannot undo this one)"
+      },
+      "post-label | model P@50 below the frozen rule (model minus rule)": {
+        "31 March: value": -0.036,
+        "31 March: fired": true,
+        "30 April: value": 0.104,
+        "30 April: fired": false,
+        "if it fires": "two labeled months in a row: drop the model, order by clicks at stake only"
+      },
+      "post-label | batch still below normal next month under 70%": {
+        "31 March: value": 0.88,
+        "31 March: fired": false,
+        "30 April: value": 0.98,
+        "30 April: fired": false,
+        "if it fires": "the gates let noise in: revisit the 80% cut and the one-month baseline"
+      },
+      "post-label | playbook below the clicks-only order on persistence (difference)": {
+        "31 March: value": 0.12,
+        "31 March: fired": false,
+        "30 April: value": 0.04,
+        "30 April: fired": false,
+        "if it fires": "two labeled months in a row: drop the model weight"
+      }
+    }
+  },
+  "exports": {
+    "queue_csv": "work/outputs/w07_action_queue.csv",
+    "figures": [
+      "work/figures/w07_precision_at_k.png",
+      "work/figures/w07_decay_insight.png",
+      "work/figures/w07_batch_value.png",
+      "work/figures/w07_action_mix.png"
+    ]
+  }
+}
