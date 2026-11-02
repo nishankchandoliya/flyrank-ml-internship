@@ -1,0 +1,907 @@
+{
+  "notebook": "work/notebooks/capstone.ipynb",
+  "paper_url": "https://nishankchandoliya.github.io/flyrank-ml-internship/",
+  "run_date": "2026-10-25",
+  "versions": {
+    "python": "3.13.17",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "duckdb": "2.0.0",
+    "matplotlib": "3.11.2"
+  },
+  "seed": 42,
+  "decision_days": {
+    "31 March": {
+      "feature_month": "2026-03",
+      "label_month_hindsight": "2026-04",
+      "previous_month": "2026-02",
+      "model_trained_on": "Feb→Mar",
+      "sealed": false
+    },
+    "30 April": {
+      "feature_month": "2026-04",
+      "label_month_hindsight": "2026-05",
+      "previous_month": "2026-03",
+      "model_trained_on": "Mar→Apr",
+      "sealed": false
+    },
+    "31 May": {
+      "feature_month": "2026-05",
+      "label_month_hindsight": "2026-06",
+      "previous_month": "2026-04",
+      "model_trained_on": "Apr→May",
+      "sealed": true
+    }
+  },
+  "sealed_run": {
+    "june_facts": {
+      "pages in the 31 May frame": 106609.0,
+      "pages without every June day (left out of scoring, W03 rule 4)": 3293.0,
+      "label base rate, all frame pages": 0.6576,
+      "label base rate, review pool": 0.6407,
+      "strict label base rate, review pool": 0.6461,
+      "pool base rate of the training month (Apr→May)": 0.5729
+    },
+    "expectations_note": "written before June 2026 was read; tests fixed in code, never changed after",
+    "expectations_held": {
+      "H1": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H2": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H3": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H4": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H5": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H6": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H7": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      },
+      "H8": {
+        "31 March": true,
+        "30 April": true,
+        "31 May": true
+      }
+    },
+    "action_counts": {
+      "review_for_refresh": 10319.0,
+      "investigate_quiet_risk": 12701.0,
+      "verify_then_review": 439.0,
+      "site_check_first": 14596.0,
+      "monitor_only": 4853.0,
+      "no_action": 35583.0,
+      "wait_and_recheck": 11703.0,
+      "not_in_review_pool": 16415.0
+    },
+    "first_batch": {
+      "pages on the queue": 42908.0,
+      "rows that need a person": 38055.0,
+      "first batch actions": {
+        "site_check_first": 22.0,
+        "review_for_refresh": 12.0,
+        "investigate_quiet_risk": 10.0,
+        "verify_then_review": 6.0
+      },
+      "clients in the first batch": 8.0,
+      "biggest client in the batch": "client rank 7 with 16 rows",
+      "context codes in the batch": {
+        "below_normal_level": 47.0,
+        "back_to_normal": 3.0,
+        "clicks_down": 50.0,
+        "low_ctr_for_position": 3.0,
+        "one_day_spike": 6.0,
+        "site_wide_drop": 23.0
+      },
+      "clients behind the site_check_first rows of the batch": 4.0,
+      "clicks a day at stake in the batch": 556.3875,
+      "share of all clicks at stake held by the batch": 0.0849
+    },
+    "monitoring": {
+      "pre_release": {
+        "pool size change vs last run": 0.065,
+        "PSI imp_per_day_log": 0.0404,
+        "PSI ctr_pct": 0.0598,
+        "PSI avg_position": 0.2649,
+        "PSI late_half_share": 0.2035,
+        "PSI gsc_days": 0.0047,
+        "share of pool pages off the queue as young": 0.1298,
+        "clients with a site-wide drop": 8.0,
+        "biggest single-client share of the batch": 0.32
+      },
+      "post_label": {
+        "base-rate move vs the training month": 0.0679,
+        "model C P@50 minus frozen rule P@50": 0.008,
+        "batch still below normal next month": 0.94,
+        "playbook minus clicks-only on persistence": 0.0
+      },
+      "model_below_rule": {
+        "31 March": true,
+        "30 April": false,
+        "31 May": false
+      },
+      "fallback_triggered": false
+    }
+  },
+  "results_by_day": {
+    "31 March": {
+      "random P@50": 0.5034,
+      "model D P@50": 0.776,
+      "model C P@50": 0.748,
+      "rule P@50": 0.784,
+      "slide P@50": 0.8,
+      "playbook clicks still lost": 553.0952,
+      "clicks-only clicks still lost": 546.3024,
+      "model-only clicks still lost": 1.881,
+      "rule clicks still lost": 45.8333,
+      "playbook still below normal": 0.88,
+      "playbook declined (W03 label)": 0.5,
+      "slid-below still below normal": 0.8388,
+      "surge-ended still below normal": 0.4074,
+      "slid-below declined": 0.7228,
+      "surge-ended declined": 0.7123,
+      "strict base rate": 0.5079,
+      "model D strict P@50": 0.496
+    },
+    "30 April": {
+      "random P@50": 0.5811,
+      "model D P@50": 0.988,
+      "model C P@50": 0.988,
+      "rule P@50": 0.884,
+      "slide P@50": 0.98,
+      "playbook clicks still lost": 527.4194,
+      "clicks-only clicks still lost": 585.4839,
+      "model-only clicks still lost": 2.0323,
+      "rule clicks still lost": 105.0323,
+      "playbook still below normal": 0.98,
+      "playbook declined (W03 label)": 0.88,
+      "slid-below still below normal": 0.9086,
+      "surge-ended still below normal": 0.3666,
+      "slid-below declined": 0.7531,
+      "surge-ended declined": 0.6613,
+      "strict base rate": 0.5088,
+      "model D strict P@50": 0.48
+    },
+    "31 May": {
+      "random P@50": 0.6368,
+      "model D P@50": 0.944,
+      "model C P@50": 0.944,
+      "rule P@50": 0.936,
+      "slide P@50": 0.92,
+      "playbook clicks still lost": 694.5333,
+      "clicks-only clicks still lost": 756.6333,
+      "model-only clicks still lost": 38.1,
+      "rule clicks still lost": 139.8667,
+      "playbook still below normal": 0.94,
+      "playbook declined (W03 label)": 0.82,
+      "slid-below still below normal": 0.9364,
+      "surge-ended still below normal": 0.6516,
+      "slid-below declined": 0.8075,
+      "surge-ended declined": 0.8217,
+      "strict base rate": 0.642,
+      "model D strict P@50": 0.628
+    }
+  },
+  "p50_by_fold": {
+    "31 March": {
+      "random order (base rate)": [
+        0.4052,
+        0.7076,
+        0.4672,
+        0.4073,
+        0.53
+      ],
+      "queue model (time-aware, C)": [
+        0.94,
+        0.94,
+        0.76,
+        0.68,
+        0.42
+      ],
+      "same model, test clients held out (D)": [
+        0.96,
+        0.96,
+        0.8,
+        0.78,
+        0.38
+      ],
+      "W04 rule (frozen)": [
+        0.8,
+        0.92,
+        0.88,
+        0.7,
+        0.62
+      ],
+      "slide only (no model)": [
+        0.96,
+        0.98,
+        0.78,
+        0.78,
+        0.5
+      ]
+    },
+    "30 April": {
+      "random order (base rate)": [
+        0.3973,
+        0.5906,
+        0.5954,
+        0.631,
+        0.6912
+      ],
+      "queue model (time-aware, C)": [
+        0.98,
+        0.98,
+        1.0,
+        0.98,
+        1.0
+      ],
+      "same model, test clients held out (D)": [
+        0.98,
+        0.98,
+        1.0,
+        0.98,
+        1.0
+      ],
+      "W04 rule (frozen)": [
+        0.74,
+        0.96,
+        0.94,
+        0.86,
+        0.92
+      ],
+      "slide only (no model)": [
+        0.96,
+        0.96,
+        1.0,
+        1.0,
+        0.98
+      ]
+    },
+    "31 May": {
+      "random order (base rate)": [
+        0.7232,
+        0.5408,
+        0.7358,
+        0.706,
+        0.4782
+      ],
+      "queue model (time-aware, C)": [
+        0.98,
+        0.9,
+        0.92,
+        0.96,
+        0.96
+      ],
+      "same model, test clients held out (D)": [
+        0.98,
+        0.9,
+        0.92,
+        0.96,
+        0.96
+      ],
+      "W04 rule (frozen)": [
+        0.92,
+        0.92,
+        1.0,
+        0.94,
+        0.9
+      ],
+      "slide only (no model)": [
+        0.96,
+        0.92,
+        0.9,
+        0.98,
+        0.84
+      ]
+    }
+  },
+  "precision_at_k_fold_mean": {
+    "31 March": {
+      "random order (base rate)": {
+        "10": 0.5034,
+        "20": 0.5034,
+        "30": 0.5034,
+        "50": 0.5034,
+        "75": 0.5034,
+        "100": 0.5034,
+        "150": 0.5034,
+        "200": 0.5034
+      },
+      "queue model (time-aware, C)": {
+        "10": 0.8,
+        "20": 0.77,
+        "30": 0.7533,
+        "50": 0.748,
+        "75": 0.792,
+        "100": 0.806,
+        "150": 0.824,
+        "200": 0.831
+      },
+      "same model, test clients held out (D)": {
+        "10": 0.8,
+        "20": 0.8,
+        "30": 0.7733,
+        "50": 0.776,
+        "75": 0.7867,
+        "100": 0.802,
+        "150": 0.8267,
+        "200": 0.836
+      },
+      "W04 rule (frozen)": {
+        "10": 0.78,
+        "20": 0.85,
+        "30": 0.8067,
+        "50": 0.784,
+        "75": 0.8,
+        "100": 0.81,
+        "150": 0.796,
+        "200": 0.801
+      },
+      "slide only (no model)": {
+        "10": 0.74,
+        "20": 0.78,
+        "30": 0.7867,
+        "50": 0.8,
+        "75": 0.8267,
+        "100": 0.84,
+        "150": 0.844,
+        "200": 0.842
+      }
+    },
+    "30 April": {
+      "random order (base rate)": {
+        "10": 0.5811,
+        "20": 0.5811,
+        "30": 0.5811,
+        "50": 0.5811,
+        "75": 0.5811,
+        "100": 0.5811,
+        "150": 0.5811,
+        "200": 0.5811
+      },
+      "queue model (time-aware, C)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.9933,
+        "50": 0.988,
+        "75": 0.9787,
+        "100": 0.968,
+        "150": 0.9653,
+        "200": 0.964
+      },
+      "same model, test clients held out (D)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.9933,
+        "50": 0.988,
+        "75": 0.9733,
+        "100": 0.97,
+        "150": 0.964,
+        "200": 0.965
+      },
+      "W04 rule (frozen)": {
+        "10": 0.88,
+        "20": 0.89,
+        "30": 0.8933,
+        "50": 0.884,
+        "75": 0.88,
+        "100": 0.88,
+        "150": 0.872,
+        "200": 0.864
+      },
+      "slide only (no model)": {
+        "10": 1.0,
+        "20": 1.0,
+        "30": 0.98,
+        "50": 0.98,
+        "75": 0.9787,
+        "100": 0.974,
+        "150": 0.9667,
+        "200": 0.959
+      }
+    },
+    "31 May": {
+      "random order (base rate)": {
+        "10": 0.6368,
+        "20": 0.6368,
+        "30": 0.6368,
+        "50": 0.6368,
+        "75": 0.6368,
+        "100": 0.6368,
+        "150": 0.6368,
+        "200": 0.6368
+      },
+      "queue model (time-aware, C)": {
+        "10": 0.9,
+        "20": 0.95,
+        "30": 0.9533,
+        "50": 0.944,
+        "75": 0.9493,
+        "100": 0.946,
+        "150": 0.932,
+        "200": 0.931
+      },
+      "same model, test clients held out (D)": {
+        "10": 0.94,
+        "20": 0.93,
+        "30": 0.9333,
+        "50": 0.944,
+        "75": 0.944,
+        "100": 0.942,
+        "150": 0.9293,
+        "200": 0.926
+      },
+      "W04 rule (frozen)": {
+        "10": 0.96,
+        "20": 0.95,
+        "30": 0.9533,
+        "50": 0.936,
+        "75": 0.9227,
+        "100": 0.918,
+        "150": 0.9133,
+        "200": 0.908
+      },
+      "slide only (no model)": {
+        "10": 0.94,
+        "20": 0.93,
+        "30": 0.94,
+        "50": 0.92,
+        "75": 0.9307,
+        "100": 0.932,
+        "150": 0.928,
+        "200": 0.919
+      }
+    }
+  },
+  "batch_value": {
+    "31 March": {
+      "playbook: model score x clicks at stake": {
+        "declined (W03 label)": 0.5,
+        "fell another 20% (strict)": 0.36,
+        "still below normal next month": 0.88,
+        "clicks a day at stake on the day": 491.8661,
+        "clicks a day still lost next month": 553.0952,
+        "rows with 0 clicks this month": 0.0,
+        "biggest single-client share": 0.4
+      },
+      "model score only": {
+        "declined (W03 label)": 0.84,
+        "fell another 20% (strict)": 0.56,
+        "still below normal next month": 0.82,
+        "clicks a day at stake on the day": 2.8036,
+        "clicks a day still lost next month": 1.881,
+        "rows with 0 clicks this month": 0.52,
+        "biggest single-client share": 0.44
+      },
+      "clicks at stake only (no model)": {
+        "declined (W03 label)": 0.42,
+        "fell another 20% (strict)": 0.3,
+        "still below normal next month": 0.76,
+        "clicks a day at stake on the day": 507.9732,
+        "clicks a day still lost next month": 546.3024,
+        "rows with 0 clicks this month": 0.0,
+        "biggest single-client share": 0.44
+      },
+      "W04 rule (frozen)": {
+        "declined (W03 label)": 0.92,
+        "fell another 20% (strict)": 0.44,
+        "still below normal next month": 0.82,
+        "clicks a day at stake on the day": 38.4911,
+        "clicks a day still lost next month": 45.8333,
+        "rows with 0 clicks this month": 0.02,
+        "biggest single-client share": 0.44
+      },
+      "slide only (no model)": {
+        "declined (W03 label)": 0.98,
+        "fell another 20% (strict)": 0.54,
+        "still below normal next month": 0.96,
+        "clicks a day at stake on the day": 5.5,
+        "clicks a day still lost next month": 5.7595,
+        "rows with 0 clicks this month": 0.34,
+        "biggest single-client share": 0.7
+      }
+    },
+    "30 April": {
+      "playbook: model score x clicks at stake": {
+        "declined (W03 label)": 0.88,
+        "fell another 20% (strict)": 0.56,
+        "still below normal next month": 0.98,
+        "clicks a day at stake on the day": 487.1785,
+        "clicks a day still lost next month": 527.4194,
+        "rows with 0 clicks this month": 0.04,
+        "biggest single-client share": 0.28
+      },
+      "model score only": {
+        "declined (W03 label)": 1.0,
+        "fell another 20% (strict)": 0.46,
+        "still below normal next month": 0.96,
+        "clicks a day at stake on the day": 2.5462,
+        "clicks a day still lost next month": 2.0323,
+        "rows with 0 clicks this month": 0.66,
+        "biggest single-client share": 0.28
+      },
+      "clicks at stake only (no model)": {
+        "declined (W03 label)": 0.78,
+        "fell another 20% (strict)": 0.64,
+        "still below normal next month": 0.94,
+        "clicks a day at stake on the day": 524.9505,
+        "clicks a day still lost next month": 585.4839,
+        "rows with 0 clicks this month": 0.02,
+        "biggest single-client share": 0.3
+      },
+      "W04 rule (frozen)": {
+        "declined (W03 label)": 0.9,
+        "fell another 20% (strict)": 0.6,
+        "still below normal next month": 0.9,
+        "clicks a day at stake on the day": 114.3054,
+        "clicks a day still lost next month": 105.0323,
+        "rows with 0 clicks this month": 0.04,
+        "biggest single-client share": 0.24
+      },
+      "slide only (no model)": {
+        "declined (W03 label)": 1.0,
+        "fell another 20% (strict)": 0.48,
+        "still below normal next month": 1.0,
+        "clicks a day at stake on the day": 49.6882,
+        "clicks a day still lost next month": 49.0645,
+        "rows with 0 clicks this month": 0.2,
+        "biggest single-client share": 0.42
+      }
+    },
+    "31 May": {
+      "playbook: model score x clicks at stake": {
+        "declined (W03 label)": 0.82,
+        "fell another 20% (strict)": 0.64,
+        "still below normal next month": 0.94,
+        "clicks a day at stake on the day": 556.3875,
+        "clicks a day still lost next month": 694.5333,
+        "rows with 0 clicks this month": 0.0,
+        "biggest single-client share": 0.32
+      },
+      "model score only": {
+        "declined (W03 label)": 0.94,
+        "fell another 20% (strict)": 0.6,
+        "still below normal next month": 0.88,
+        "clicks a day at stake on the day": 38.8292,
+        "clicks a day still lost next month": 38.1,
+        "rows with 0 clicks this month": 0.3,
+        "biggest single-client share": 0.36
+      },
+      "clicks at stake only (no model)": {
+        "declined (W03 label)": 0.74,
+        "fell another 20% (strict)": 0.62,
+        "still below normal next month": 0.94,
+        "clicks a day at stake on the day": 592.0208,
+        "clicks a day still lost next month": 756.6333,
+        "rows with 0 clicks this month": 0.0,
+        "biggest single-client share": 0.4
+      },
+      "W04 rule (frozen)": {
+        "declined (W03 label)": 0.94,
+        "fell another 20% (strict)": 0.52,
+        "still below normal next month": 0.82,
+        "clicks a day at stake on the day": 70.3208,
+        "clicks a day still lost next month": 139.8667,
+        "rows with 0 clicks this month": 0.0,
+        "biggest single-client share": 0.32
+      },
+      "slide only (no model)": {
+        "declined (W03 label)": 0.98,
+        "fell another 20% (strict)": 0.64,
+        "still below normal next month": 0.98,
+        "clicks a day at stake on the day": 98.8125,
+        "clicks a day still lost next month": 98.5,
+        "rows with 0 clicks this month": 0.08,
+        "biggest single-client share": 0.86
+      }
+    }
+  },
+  "decay": {
+    "31 March": {
+      "slid, below its normal level": {
+        "pages": 8741.0,
+        "share of pool": 0.1033,
+        "declined (W03 label)": 0.7228,
+        "fell another 20% (strict)": 0.4613,
+        "still below normal next month": 0.8388
+      },
+      "slid, back to normal (surge ended)": {
+        "pages": 8373.0,
+        "share of pool": 0.099,
+        "declined (W03 label)": 0.7123,
+        "fell another 20% (strict)": 0.5002,
+        "still below normal next month": 0.4074
+      },
+      "no slide, already below normal": {
+        "pages": 6015.0,
+        "share of pool": 0.0711,
+        "declined (W03 label)": 0.4118,
+        "fell another 20% (strict)": 0.4263,
+        "still below normal next month": 0.7987
+      },
+      "no slide, at or above normal": {
+        "pages": 40394.0,
+        "share of pool": 0.4775,
+        "declined (W03 label)": 0.441,
+        "fell another 20% (strict)": 0.5222,
+        "still below normal next month": 0.272
+      },
+      "young page, slid": {
+        "pages": 4741.0,
+        "share of pool": 0.056,
+        "declined (W03 label)": 0.715,
+        "fell another 20% (strict)": 0.5149,
+        "still below normal next month": null
+      },
+      "young page, no slide": {
+        "pages": 16328.0,
+        "share of pool": 0.193,
+        "declined (W03 label)": 0.374,
+        "fell another 20% (strict)": 0.492,
+        "still below normal next month": null
+      }
+    },
+    "30 April": {
+      "slid, below its normal level": {
+        "pages": 24005.0,
+        "share of pool": 0.2834,
+        "declined (W03 label)": 0.7531,
+        "fell another 20% (strict)": 0.488,
+        "still below normal next month": 0.9086
+      },
+      "slid, back to normal (surge ended)": {
+        "pages": 8510.0,
+        "share of pool": 0.1005,
+        "declined (W03 label)": 0.6613,
+        "fell another 20% (strict)": 0.4698,
+        "still below normal next month": 0.3666
+      },
+      "no slide, already below normal": {
+        "pages": 11123.0,
+        "share of pool": 0.1313,
+        "declined (W03 label)": 0.4795,
+        "fell another 20% (strict)": 0.4861,
+        "still below normal next month": 0.8674
+      },
+      "no slide, at or above normal": {
+        "pages": 30296.0,
+        "share of pool": 0.3577,
+        "declined (W03 label)": 0.4344,
+        "fell another 20% (strict)": 0.4922,
+        "still below normal next month": 0.2841
+      },
+      "young page, slid": {
+        "pages": 3480.0,
+        "share of pool": 0.0411,
+        "declined (W03 label)": 0.8198,
+        "fell another 20% (strict)": 0.6155,
+        "still below normal next month": null
+      },
+      "young page, no slide": {
+        "pages": 7277.0,
+        "share of pool": 0.0859,
+        "declined (W03 label)": 0.4756,
+        "fell another 20% (strict)": 0.5769,
+        "still below normal next month": null
+      }
+    },
+    "31 May": {
+      "slid, below its normal level": {
+        "pages": 18466.0,
+        "share of pool": 0.2087,
+        "declined (W03 label)": 0.8075,
+        "fell another 20% (strict)": 0.6629,
+        "still below normal next month": 0.9364
+      },
+      "slid, back to normal (surge ended)": {
+        "pages": 4716.0,
+        "share of pool": 0.0533,
+        "declined (W03 label)": 0.8217,
+        "fell another 20% (strict)": 0.7171,
+        "still below normal next month": 0.6516
+      },
+      "no slide, already below normal": {
+        "pages": 19785.0,
+        "share of pool": 0.2236,
+        "declined (W03 label)": 0.5884,
+        "fell another 20% (strict)": 0.6113,
+        "still below normal next month": 0.8847
+      },
+      "no slide, at or above normal": {
+        "pages": 34066.0,
+        "share of pool": 0.3851,
+        "declined (W03 label)": 0.5875,
+        "fell another 20% (strict)": 0.6724,
+        "still below normal next month": 0.4766
+      },
+      "young page, slid": {
+        "pages": 3151.0,
+        "share of pool": 0.0356,
+        "declined (W03 label)": 0.7623,
+        "fell another 20% (strict)": 0.5706,
+        "still below normal next month": null
+      },
+      "young page, no slide": {
+        "pages": 8281.0,
+        "share of pool": 0.0936,
+        "declined (W03 label)": 0.4636,
+        "fell another 20% (strict)": 0.5714,
+        "still below normal next month": null
+      }
+    }
+  },
+  "coverage": {
+    "clients_in_release": 104,
+    "clients_in_frame": {
+      "31 March": 38,
+      "30 April": 44,
+      "31 May": 45
+    }
+  },
+  "slices": {
+    "Feb→Mar": {
+      "pages": 64881.0,
+      "clients": 26.0,
+      "pool_pages": 60290.0,
+      "base_rate": 0.2484,
+      "pool_base_rate": 0.2402,
+      "same as W06": true,
+      "pool pages with a full previous month": null
+    },
+    "Mar→Apr": {
+      "pages": 94496.0,
+      "clients": 38.0,
+      "pool_pages": 84592.0,
+      "base_rate": 0.5159,
+      "pool_base_rate": 0.4973,
+      "same as W06": true,
+      "pool pages with a full previous month": "75.1%"
+    },
+    "Apr→May": {
+      "pages": 99868.0,
+      "clients": 44.0,
+      "pool_pages": 84691.0,
+      "base_rate": 0.5835,
+      "pool_base_rate": 0.5729,
+      "same as W06": true,
+      "pool pages with a full previous month": "87.3%"
+    },
+    "May→Jun": {
+      "pages": 106609.0,
+      "clients": 45.0,
+      "pool_pages": 90194.0,
+      "base_rate": "sealed",
+      "pool_base_rate": "sealed",
+      "same as W06": "new slice",
+      "pool pages with a full previous month": "87.0%"
+    }
+  },
+  "funnel_may": {
+    "pages with rows in May": 389153.0,
+    "row on all 31 days of May": 363626.0,
+    "client GSC tracking started by 1 May": 356342.0,
+    "at least 100 GSC impressions in May": 106609.0,
+    "row on all 30 days of June (label measurable)": "checked in section 4"
+  },
+  "june_data_check": {
+    "May, all days": {
+      "impressions": 8585964.0,
+      "clicks": 29815.0,
+      "rows_": 377012.0,
+      "gsc_rows": 141078.0,
+      "impressions vs May": 1.0,
+      "GSC rows vs May": 1.0
+    },
+    "June 1 to 23": {
+      "impressions": 7293330.0,
+      "clicks": 39986.0,
+      "rows_": 398081.0,
+      "gsc_rows": 129365.0,
+      "impressions vs May": 0.8494,
+      "GSC rows vs May": 0.917
+    },
+    "June 24 to 30 (newest week)": {
+      "impressions": 6921183.0,
+      "clicks": 41349.0,
+      "rows_": 362601.0,
+      "gsc_rows": 129077.0,
+      "impressions vs May": 0.8061,
+      "GSC rows vs May": 0.9149
+    }
+  },
+  "lift_over_base_rate": {
+    "31 March": {
+      "queue model (time-aware, C)": 0.2446,
+      "same model, test clients held out (D)": 0.2726,
+      "W04 rule (frozen)": 0.2806,
+      "slide only (no model)": 0.2966
+    },
+    "30 April": {
+      "queue model (time-aware, C)": 0.4069,
+      "same model, test clients held out (D)": 0.4069,
+      "W04 rule (frozen)": 0.3029,
+      "slide only (no model)": 0.3989
+    },
+    "31 May": {
+      "queue model (time-aware, C)": 0.3072,
+      "same model, test clients held out (D)": 0.3072,
+      "W04 rule (frozen)": 0.2992,
+      "slide only (no model)": 0.2832
+    }
+  },
+  "batch_rows_without_june": 0,
+  "rows_that_need_a_person": {
+    "total": {
+      "31 March": 25472,
+      "30 April": 40102,
+      "31 May": 38055
+    },
+    "with_full_label_month": {
+      "31 March": 25472,
+      "30 April": 40102,
+      "31 May": 37378
+    }
+  },
+  "limits": {
+    "decision days with hindsight (of them sealed)": "3 (1)",
+    "clients in the 31 May frame / in the release": "45 / 104",
+    "top 3 clients' share of 31 May frame pages": "49.4%",
+    "biggest single-client share of the 31 May batch": "32%",
+    "31 May pool pages off the queue as young (no full April)": "13.0%",
+    "31 May frame pages left out of scoring (no full June)": "3,293",
+    "queue model: mean score on the 31 May pool vs share that declined in June": "0.486 vs 0.641",
+    "strict label, model D P@50 vs strict base rate (31 May)": "0.628 vs 0.642",
+    "playbook batch rows labeled 'declined' (31 May)": "82%"
+  },
+  "strict_curves_p50": {
+    "31 March": {
+      "random order (base rate)": 0.5079,
+      "queue model (time-aware, C)": 0.484,
+      "same model, test clients held out (D)": 0.496,
+      "W04 rule (frozen)": 0.428,
+      "slide only (no model)": 0.388
+    },
+    "30 April": {
+      "random order (base rate)": 0.5088,
+      "queue model (time-aware, C)": 0.48,
+      "same model, test clients held out (D)": 0.48,
+      "W04 rule (frozen)": 0.608,
+      "slide only (no model)": 0.48
+    },
+    "31 May": {
+      "random order (base rate)": 0.642,
+      "queue model (time-aware, C)": 0.632,
+      "same model, test clients held out (D)": 0.628,
+      "W04 rule (frozen)": 0.632,
+      "slide only (no model)": 0.548
+    }
+  },
+  "figures": [
+    "docs/figures/capstone_fig1_validation_designs.png",
+    "docs/figures/capstone_fig2_three_decision_days.png",
+    "docs/figures/capstone_fig3_batch_value.png",
+    "docs/figures/capstone_fig4_decay_vs_surge.png"
+  ]
+}

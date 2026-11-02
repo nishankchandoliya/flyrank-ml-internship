@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which pages should a content reviewer look at first? A monthly review queue tested on a sealed month</title>
+<meta name="description" content="A research paper from the FlyRank ML internship: building and honestly testing a monthly review queue that puts pages with lasting search visit losses in front of a content reviewer, checked on a sealed month of Google Search Console data.">
+<meta name="author" content="Nishank Chandoliya">
+<link rel="canonical" href="https://nishankchandoliya.github.io/flyrank-ml-internship/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Which pages should a content reviewer look at first?">
+<meta property="og:description" content="A monthly review queue built on FlyRank's pseudonymized search data, tested on client folds, time-aware training and one sealed month.">
+<meta property="og:url" content="https://nishankchandoliya.github.io/flyrank-ml-internship/">
+<meta property="og:image" content="https://nishankchandoliya.github.io/flyrank-ml-internship/figures/capstone_fig2_three_decision_days.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #fcfcfb;
+    --ink: #1d1e20;
+    --ink-2: #4f5257;
+    --ink-3: #6b6e73;
+    --rule: #d9dad6;
+    --rule-soft: #ebebe8;
+    --link: #1d4f91;
+    --sealed: #eef3fb;
+    --sealed-edge: #a9c0e3;
+    --held: #1f6a3a;
+    --code-bg: #f0f0ec;
+    --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --text: 40rem;
+    --wide: 54rem;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 1.5rem; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.1875rem;
+    line-height: 1.62;
+    font-optical-sizing: auto;
+  }
+  a { color: var(--link); text-underline-offset: 0.16em; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 3px; border-radius: 2px; }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--paper); padding: 0.5rem 0.75rem; font-family: var(--sans); }
+  .skip:focus { left: 1rem; top: 1rem; z-index: 10; }
+
+  main { padding: 0 16px 5rem; }
+  main > *, header > *, footer > * { max-width: var(--text); margin-left: auto; margin-right: auto; }
+  main > .wide, header > .wide { max-width: var(--wide); }
+
+  /* Title block */
+  header { padding: 4.5rem 16px 1rem; }
+  .kicker { font-family: var(--sans); font-size: 0.95rem; color: var(--ink-2); margin-bottom: 1.1rem; }
+  h1 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 1.3rem + 3.2vw, 3.35rem);
+    line-height: 1.06;
+    letter-spacing: -0.022em;
+    margin-top: 0;
+    margin-bottom: 1.1rem;
+    text-wrap: balance;
+  }
+  .subtitle { font-size: 1.32rem; line-height: 1.45; color: var(--ink-2); margin-top: 0; margin-bottom: 1.8rem; text-wrap: pretty; }
+  .byline { font-family: var(--sans); font-size: 0.95rem; color: var(--ink-2); display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 1.2rem; margin: 0 auto 0; padding: 1rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .byline dt { color: var(--ink-3); }
+  .byline dd { margin: 0; color: var(--ink); }
+
+  /* Headings */
+  h2, h3 { font-family: var(--sans); color: var(--ink); text-wrap: balance; }
+  h2 { font-size: 1.62rem; font-weight: 650; letter-spacing: -0.012em; line-height: 1.2; margin-top: 3.6rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.17rem; font-weight: 600; line-height: 1.3; margin-top: 2.2rem; margin-bottom: 0.55rem; }
+  h2 .num, h3 .num { color: var(--ink-3); font-weight: 500; margin-right: 0.45em; }
+  p, li { text-wrap: pretty; }
+  p { margin: 0 auto 1.05rem; }
+  ul, ol { padding-left: 1.3rem; }
+  main > ul, main > ol { padding-left: 1.3rem; }
+  li { margin-bottom: 0.45rem; }
+  li::marker { color: var(--ink-3); }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.8em; background: var(--code-bg); padding: 0.08em 0.32em; border-radius: 3px; overflow-wrap: anywhere; }
+  pre { font-family: var(--mono); font-size: 0.84rem; line-height: 1.55; background: var(--code-bg); padding: 1rem 1.1rem; border-radius: 4px; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* Abstract */
+  .abstract { margin-top: 2.4rem; padding-left: 1.2rem; border-left: 3px solid var(--ink); }
+  .abstract h2 { margin-top: 0; font-size: 1.05rem; font-weight: 600; letter-spacing: 0; }
+  .abstract p { font-size: 1.24rem; line-height: 1.58; }
+
+  /* Contents: inline on small screens, in the left margin on wide ones */
+  .toc { font-family: var(--sans); font-size: 0.95rem; margin-top: 2.2rem; }
+  .toc h2 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.5rem; letter-spacing: 0; }
+  .toc ol { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 2rem; }
+  .toc li { margin: 0 0 0.3rem; break-inside: avoid; }
+  .toc a { color: var(--ink-2); text-decoration: none; }
+  .toc a:hover, .toc a[aria-current="true"] { color: var(--ink); text-decoration: underline; }
+  @media (min-width: 1240px) {
+    .toc { position: fixed; top: 5rem; left: max(1.5rem, calc(50% - var(--wide) / 2 - 15rem)); width: 12.5rem; margin: 0; max-width: none; }
+    .toc ol { columns: 1; }
+    .toc li { margin-bottom: 0.5rem; }
+    .toc a[aria-current="true"] { color: var(--ink); text-decoration: none; box-shadow: inset 2px 0 0 var(--ink); padding-left: 0.6rem; margin-left: -0.6rem; }
+  }
+
+  /* Figures */
+  figure { margin: 2rem auto 2.2rem; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-family: var(--sans); font-size: 0.97rem; line-height: 1.5; color: var(--ink-2); margin-top: 0.8rem; max-width: var(--text); }
+  figcaption strong { color: var(--ink); font-weight: 600; }
+  details { font-family: var(--sans); font-size: 0.92rem; margin-top: 0.6rem; }
+  summary { cursor: pointer; color: var(--link); width: max-content; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 1.3rem auto 1.6rem; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 0.93rem; line-height: 1.4; }
+  caption { text-align: left; color: var(--ink-2); font-size: 0.92rem; padding-bottom: 0.6rem; caption-side: top; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th { font-weight: 600; border-bottom: 1px solid var(--ink-3); vertical-align: bottom; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  tbody th { font-weight: 500; }
+  tr.base td, tr.base th { color: var(--ink-3); }
+
+  /* The sealed-test ledger: the one bold element */
+  .ledger { margin: 1.8rem auto 1rem; }
+  .ledger table { font-size: 0.95rem; }
+  .ledger th.day, .ledger td.day { text-align: center; width: 6.6rem; padding-right: 0; padding-left: 0; }
+  .ledger .sealed { background: var(--sealed); box-shadow: inset 1px 0 0 var(--sealed-edge), inset -1px 0 0 var(--sealed-edge); }
+  .ledger thead .sealed { box-shadow: inset 1px 0 0 var(--sealed-edge), inset -1px 0 0 var(--sealed-edge), inset 0 3px 0 var(--link); }
+  .ledger tbody tr:last-child .sealed { box-shadow: inset 1px 0 0 var(--sealed-edge), inset -1px 0 0 var(--sealed-edge), inset 0 -1px 0 var(--sealed-edge); }
+  .ledger .id { color: var(--ink-3); font-weight: 600; width: 2.4rem; }
+  .ledger .test { color: var(--ink-2); font-size: 0.86rem; display: block; margin-top: 0.2rem; }
+  .held { color: var(--held); font-weight: 600; white-space: nowrap; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ledger-note { font-family: var(--sans); font-size: 0.92rem; color: var(--ink-2); }
+
+  .card { font-family: var(--mono); font-size: 0.82rem; line-height: 1.6; background: var(--code-bg); padding: 1rem 1.1rem; border-radius: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .refs li { font-size: 1.02rem; }
+
+  footer { border-top: 1px solid var(--rule); padding: 2rem 16px 3rem; font-family: var(--sans); font-size: 0.9rem; color: var(--ink-2); }
+  footer p { margin-bottom: 0.4rem; }
+
+  .swipe { display: none; }
+  @media (max-width: 560px) {
+    body { font-size: 1.09rem; }
+    figure > a { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    figure > a img { min-width: 560px; }
+    .swipe { display: block; margin-top: 0.4rem; color: var(--ink-3); }
+    header { padding-top: 2.5rem; }
+    .subtitle { font-size: 1.15rem; }
+    .abstract p { font-size: 1.12rem; }
+    .toc ol { columns: 1; }
+    .byline { grid-template-columns: 1fr; gap: 0; }
+    .byline dt { margin-top: 0.4rem; }
+    h2 { margin-top: 2.8rem; }
+    .ledger th.day, .ledger td.day { width: 3.6rem; }
+    .ledger .word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .ledger .id { width: 2rem; }
+  }
+  @media print {
+    .toc, .skip, details summary { display: none; }
+    body { font-size: 11pt; }
+    a { color: inherit; }
+    figure, .ledger, .table-wrap { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#abstract">Skip to the abstract</a>
+
+<header>
+  <p class="kicker">FlyRank ML internship capstone, Lane 2: Refresh / Content Opportunity Scoring</p>
+  <h1>Which pages should a content reviewer look at first?</h1>
+  <p class="subtitle">A monthly review queue built on FlyRank's search data, tested on clients it never saw, with time-aware training and one sealed month read only after the expected results were written down.</p>
+  <dl class="byline">
+    <dt>Author</dt><dd>Nishank Chandoliya</dd>
+    <dt>Date</dt><dd>October 2026</dd>
+    <dt>Data</dt><dd>FlyRank pseudonymized warehouse release, build v20260703</dd>
+    <dt>Code</dt><dd><a href="https://github.com/nishankchandoliya/flyrank-ml-internship">github.com/nishankchandoliya/flyrank-ml-internship</a></dd>
+  </dl>
+</header>
+
+<main id="main">
+
+<section class="abstract" id="abstract" aria-labelledby="abstract-h">
+  <h2 id="abstract-h">Abstract</h2>
+  <p>A content reviewer at FlyRank has time for about 50 pages a month, so this paper asks which pages they should look at first. I used FlyRank's pseudonymized warehouse release of Google Search Console data (78.8 million daily rows) and built one row per page per month for 94,496 to 106,609 pages from 38 to 45 client sites, with decision days at the end of March, April and May 2026. A frozen hand rule, a logistic regression and a plain sort by the drop inside the month were compared on held-out clients with training only on the past and an action playbook ordered the pages that need a person by the clicks they lost against their own previous month. On the sealed month (decided on 31 May, read once after eight expected results were fixed in code) all eight held: the model's precision@50 was 0.944 against 0.936 for the rule, 0.920 for the drop sort and a base rate of 0.637; the playbook's first 50 rows held 695 clicks a day that were still lost a month later, against 38 for the model alone. The queue is decision support for finding visits that were already lost and stayed lost: it does not forecast new drops, it does not show that a refresh would bring traffic back and the model is level with the simple methods rather than ahead of them.</p>
+</section>
+
+<nav class="toc" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#introduction">1. Introduction</a></li>
+    <li><a href="#data">2. Data</a></li>
+    <li><a href="#methodology">3. Methodology</a></li>
+    <li><a href="#results">4. Results</a></li>
+    <li><a href="#limitations">5. Limitations</a></li>
+    <li><a href="#recommendations">6. Ranked recommendations</a></li>
+    <li><a href="#reproducibility">7. Reproducibility</a></li>
+    <li><a href="#acknowledgments">8. Acknowledgments</a></li>
+  </ol>
+</nav>
+
+<h2 id="introduction"><span class="num">1</span>Introduction and problem statement</h2>
+
+<p>On the last day of May a reviewer opens a list of about 100,000 pages from 45 client sites. They can check about 50. Some pages lost visits and will stay down. Some only look down because a spike early in the month ended. Some are new pages that dipped for a week and will come back. A batch of 50 is about 17 hours of review, so picking the wrong 50 spends that time on pages that did not need it while the real losses wait another month.</p>
+
+<p>So the decision this work supports is narrow: <strong>which pages a person reviews first each month and which check to start with.</strong> The output is a ranked queue with an action and a reason for every page. A person makes every decision. Nothing is changed on a site automatically.</p>
+
+<p>The obvious answers did not hold up in this data:</p>
+<ul>
+  <li><strong>Biggest pages first does worse than random.</strong> Sorting by search volume put steady pages at the top: precision@50 of 0.28 against 0.515 for a random order (W04).</li>
+  <li><strong>A short surge ending looks exactly like a decline.</strong> A month-over-month label counts both the same, which pushes ended surges to the top of any queue trained on it (W04, W07).</li>
+  <li><strong>A model that looked 10 points better than a rule lost that lead</strong> once it was trained only on months that are complete on the decision day (W05 to W06).</li>
+</ul>
+
+<p>This paper puts those lessons into one monthly queue and tests it honestly. The work has three parts:</p>
+<ol>
+  <li>A comparison of a frozen rule, a slide-only sort and a logistic regression on the same pages, with clients held out and training only on the past.</li>
+  <li>A playbook that gives each page one action and orders the pages that need a person by the visits they lost against their own normal level.</li>
+  <li>A sealed test: the queue for 31 May was built without June, eight expected results were fixed in code and only then was June read, once.</li>
+</ol>
+
+<p>What this paper does not do: it does not predict what Google will do, it does not forecast which pages will start to fall and it does not measure whether a refresh brings traffic back. Section 5 explains each of these limits.</p>
+
+<h2 id="data"><span class="num">2</span>Data</h2>
+
+<p><strong>Release.</strong> FlyRank's pseudonymized warehouse release on Hugging Face (<code>FlyRank/internship-warehouse</code>, build <code>flyrank_pseudonymized_warehouse_release_v20260703</code>, exported 3 July 2026). Its daily table has 78,835,655 rows, one per page per day, from 27 January 2025 to 30 June 2026. Client and page ids are scrambled codes. The release has no client names, domains, URLs, page titles or search queries.</p>
+
+<p><strong>What I used.</strong> The monthly partitions of <code>fact_content_daily_performance</code> for February to June 2026 (Google Search Console impressions, clicks, positions and a flag for days with search data) and one column of <code>dim_clients</code> (the date each client's search tracking started, so an early zero is never read as "no impressions" when it means "not tracked yet").</p>
+
+<p><strong>What I left out and why.</strong></p>
+<ul>
+  <li><strong>Page edit dates</strong> in <code>dim_content</code>: they are a July 2026 snapshot, so on 31 March they would show edits made later.</li>
+  <li><strong>The 90-day query table</strong>: its fixed window overlaps the months I use as labels.</li>
+  <li><strong>Google Analytics columns</strong>: only 4.2% of March rows have them. The rest are zero-filled or empty.</li>
+  <li><strong>FlyRank's product flags and scores</strong>: not in the release on purpose, so the work only learns from observed signals.</li>
+</ul>
+
+<p><strong>Which pages count.</strong> A page enters a month's frame when it has a row on every day of the month, its client was tracked from day 1, it had at least 100 impressions that month and it has a row on every day of the next month (so its outcome can be measured). The review pool keeps the pages with at least 5 impressions a day in the second half of the month. Below that bar a page has mostly vanished already and needs a technical check, not a review.</p>
+
+<div class="table-wrap wide">
+<table>
+  <caption>Table 1. Decision days and slices. The base rate is the share of review pool pages labeled "declined" next month.</caption>
+  <thead><tr><th>Slice</th><th>Features</th><th>Normal level</th><th>Checked on</th><th class="n">Pages</th><th class="n">Clients</th><th class="n">Review pool</th><th class="n">Pool base rate</th></tr></thead>
+  <tbody>
+    <tr><th>Training for 31 March</th><td>February</td><td>none</td><td>March</td><td class="n">64,881</td><td class="n">26</td><td class="n">60,290</td><td class="n">0.240</td></tr>
+    <tr><th>Decision on 31 March</th><td>March</td><td>February</td><td>April</td><td class="n">94,496</td><td class="n">38</td><td class="n">84,592</td><td class="n">0.497</td></tr>
+    <tr><th>Decision on 30 April</th><td>April</td><td>March</td><td>May</td><td class="n">99,868</td><td class="n">44</td><td class="n">84,691</td><td class="n">0.573</td></tr>
+    <tr><th>Decision on 31 May (sealed)</th><td>May</td><td>April</td><td>June</td><td class="n">106,609</td><td class="n">45</td><td class="n">90,194</td><td class="n">0.641</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Two things about this table matter later. First, every frame covers less than half of the 104 clients in the release, because many clients started tracking late or have little search data. Second, the base rate climbs every month, so raw precision numbers from different months are not directly comparable. Section 4 always shows the base rate next to them.</p>
+
+<p><strong>Public safety.</strong> Ids are used only to group pages and to split clients between training and testing, never as model inputs. Clients appear by rank only. This page shows aggregates only.</p>
+
+<h2 id="methodology"><span class="num">3</span>Methodology</h2>
+
+<h3><span class="num">3.1</span>Assumptions</h3>
+<ol>
+  <li>One decision a month, made on the last day of the month with that month's search data. In real life the data arrives 2 to 3 days late, so a live run happens a few days after month end.</li>
+  <li>A page's previous month is its normal level. One month is short (limitation 5).</li>
+  <li>A reviewer has time for about 50 pages a month, so the top of the list matters most. About 20 minutes per page is my own estimate.</li>
+</ol>
+
+<h3><span class="num">3.2</span>Unit, label and metric</h3>
+<p><strong>Unit:</strong> one page in one month, scored on the last day of the month.</p>
+<p><strong>Label (a proxy):</strong> <code>declined_next_month</code> is 1 when next month's impressions per day are more than 20% below this month's. It says a page lost visibility. It does not say that a refresh would bring it back. It also counts pages that already fell late in the month and just stayed down, so every result is checked on a <strong>strict label</strong> too: next month more than 20% below the <em>second half</em> of this month, which only counts a fall after the decision day.</p>
+<p><strong>Metric:</strong> precision@50 (the share of the first 50 pages that carry the label), always next to the base rate. For the playbook the main measure is <strong>clicks a day still lost next month</strong> in the first 50 rows: each page's clicks a day in its normal month minus its clicks a day next month. It measures visits that were lost and did not come back on their own. It is not what a review would win back.</p>
+
+<h3><span class="num">3.3</span>Features</h3>
+<div class="table-wrap">
+<table>
+  <caption>Table 2. The five model features, all built from the feature month only.</caption>
+  <thead><tr><th>Feature</th><th>How it is built</th></tr></thead>
+  <tbody>
+    <tr><th><code>imp_per_day_log</code></th><td>log(1 + impressions per day)</td></tr>
+    <tr><th><code>ctr_pct</code></th><td>100 × clicks / impressions</td></tr>
+    <tr><th><code>avg_position</code></th><td>impression-weighted position over days with search data</td></tr>
+    <tr><th><code>late_half_share</code></th><td>second-half impressions / all impressions (the "slide" inside the month)</td></tr>
+    <tr><th><code>gsc_days</code></th><td>days with search data, scaled to a 31-day month</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3><span class="num">3.4</span>Baselines and model</h3>
+<ul>
+  <li><strong>Random queue.</strong> Its precision is the base rate.</li>
+  <li><strong>Frozen rule</strong> (<code>sliding_with_demand</code>, built in W04 and never changed). A page fires when its daily impressions fell 20% or more from the first half of the month to the second half and it still had 5 or more a day in the second half. Inside the rule, the most impressions lost per day come first.</li>
+  <li><strong>Slide-only sort.</strong> No model, just pages ordered by how much of the month's impressions came in the second half (lowest first).</li>
+  <li><strong>Model.</strong> A logistic regression on the five features with standard scaling and default settings, no tuning (W05). For each decision day it is trained only on last month's review pool, whose labels are complete on the decision day.</li>
+</ul>
+
+<h3><span class="num">3.5</span>Validation design</h3>
+<p>Every number is computed inside <strong>five client folds</strong> (<code>GroupKFold</code> on the client id): each fold tests a separate group of clients and precision is measured fold by fold. The model is also <strong>time-aware</strong>: it never learns from the month it is tested on. Design D also leaves the test clients out of training. W06 compared four designs on the same March→April test pages:</p>
+<ul>
+  <li><strong>A.</strong> random 80/20 rows (what a plain split reports)</li>
+  <li><strong>B.</strong> grouped by client, trained on the other clients' April outcomes (the W05 design)</li>
+  <li><strong>C.</strong> time-aware: trained on February→March, all clients (the model the playbook uses)</li>
+  <li><strong>D.</strong> time-aware and grouped: trained on February→March without the test clients (the strictest)</li>
+</ul>
+<p>D is the honest number for the model. Results are the mean of the five folds with the lowest and highest fold shown.</p>
+
+<h3><span class="num">3.6</span>The playbook</h3>
+<p>The playbook (W07, frozen) gives every page one action. Gates are checked in a fixed order and every cut is reused from an earlier week, none was tuned:</p>
+<div class="table-wrap wide">
+<table>
+  <caption>Table 3. The gates in the order they are checked and the action each one gives.</caption>
+  <thead><tr><th>Gate</th><th>Action</th><th>Needs a person?</th></tr></thead>
+  <tbody>
+    <tr><td>under 5 impressions a day in the second half</td><td><code>not_in_review_pool</code></td><td>no</td></tr>
+    <tr><td>no full previous month (a new or newly tracked page)</td><td><code>wait_and_recheck</code></td><td>no, scored again next month</td></tr>
+    <tr><td>the rule fired but the second half is still at 80% or more of the previous month (a surge that ended)</td><td><code>monitor_only</code></td><td>no, nobody edits it</td></tr>
+    <tr><td>the rule did not fire and no clicks were lost</td><td><code>no_action</code></td><td>no</td></tr>
+    <tr><td>one day holds 30% or more of the first half's impressions</td><td><code>verify_then_review</code></td><td>yes: tracking or campaign check first</td></tr>
+    <tr><td>the whole client's second half is under 80% of its previous month</td><td><code>site_check_first</code></td><td>yes: one ticket per client</td></tr>
+    <tr><td>the rule fired and the page sits under 80% of its normal level</td><td><code>review_for_refresh</code></td><td>yes</td></tr>
+    <tr><td>anything left: the rule did not fire but clicks were lost</td><td><code>investigate_quiet_risk</code></td><td>yes</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The order inside the queue is <strong>model score × clicks at stake</strong>, where clicks at stake are the clicks a day in the previous month minus the clicks a day in the second half of this month. The model gives the risk and the clicks give the size. The first 50 rows that need a person are the monthly batch. The model score is used only to order rows. It is not calibrated, so it is never read as a probability.</p>
+
+<h3><span class="num">3.7</span>Leakage checks</h3>
+<ul>
+  <li><strong>A label-derived column on purpose</strong> (W03): the score jumped from 0.692 to 1.000, then the column was removed.</li>
+  <li><strong>Features whose window overlaps the label</strong> (W06): one week of the label month lifted precision@50 from 0.884 to 0.960, three months of impressions that include it gave 1.000. None of them is used.</li>
+  <li><strong>Each feature dropped and each feature alone</strong> (W06): the slide carries the model (without it precision@50 falls from 0.884 to 0.652) but no single feature is suspiciously perfect.</li>
+  <li><strong>The filter that looks at the label month</strong> (a row on every day of it) removed 0 pages in the March and April frames. For the sealed run it is applied only after the queue exists.</li>
+  <li><strong>Carry-over</strong> (W06): 43% of the W05 top-50 hits only counted because the page had already fallen in late March. This is why the strict label is reported everywhere.</li>
+</ul>
+
+<h3><span class="num">3.8</span>The sealed test</h3>
+<p>June 2026 was never read in W03 to W07. For this paper the capstone notebook first re-ran the whole pipeline on 31 March and 30 April and checked that it gave back every W06 and W07 number exactly. Then it built the 31 May queue from May, April and the April→May labels only. Then it fixed eight expected results as pass/fail tests in code, each one something that had held on both earlier days. Only after that did it read June, once, as hindsight. One more check was added after June was read: a comparison of June's daily totals with May's, to see whether the newest days of the export were incomplete (section 4.6).</p>
+
+<h2 id="results"><span class="num">4</span>Results</h2>
+
+<h3><span class="num">4.1</span>The honest split erased the model's lead</h3>
+
+<figure class="wide">
+  <a href="figures/capstone_fig1_validation_designs.png"><img src="figures/capstone_fig1_validation_designs.png" width="1669" height="836" alt="Dot plot of precision@50 on the March to April test pages for seven methods. Random queue 0.503, frozen rule 0.784, slide only 0.800, model with random rows 0.880, model grouped by client 0.884, model time-aware 0.748, model time-aware and grouped 0.776. Lines show the lowest to highest fold."></a>
+  <figcaption><span class="swipe">On a phone, swipe the chart sideways or tap it to open it full size.</span><strong>Figure 1. Trained only on the past, the model falls back to the level of the rule.</strong> With a split that hides only the test clients (B) the model beat the frozen rule by 10 points (0.884 vs 0.784). Once it learns only from labels that exist on 31 March (C and D) it scores 0.748 and 0.776, below a plain slide sort (0.800). The lines show how much one number moves with which clients are tested: from 0.38 to 0.96 for D.
+  <details><summary>Show the numbers</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Method (March→April test)</th><th>Learns from April outcomes?</th><th class="n">P@50</th><th class="n">Lowest fold</th><th class="n">Highest fold</th></tr></thead>
+    <tbody>
+      <tr class="base"><th>random queue (base rate)</th><td>no model</td><td class="n">0.503</td><td class="n">0.405</td><td class="n">0.708</td></tr>
+      <tr><th>frozen rule (W04)</th><td>no model</td><td class="n">0.784</td><td class="n">0.620</td><td class="n">0.920</td></tr>
+      <tr><th>slide only</th><td>no model</td><td class="n">0.800</td><td class="n">0.500</td><td class="n">0.980</td></tr>
+      <tr><th>model A: random 80/20 rows</th><td>yes, even of the test clients</td><td class="n">0.880</td><td class="n">0.700</td><td class="n">0.980</td></tr>
+      <tr><th>model B: grouped by client (W05)</th><td>yes, of other clients</td><td class="n">0.884</td><td class="n">0.740</td><td class="n">0.980</td></tr>
+      <tr><th>model C: time-aware</th><td>no</td><td class="n">0.748</td><td class="n">0.420</td><td class="n">0.940</td></tr>
+      <tr><th>model D: time-aware + grouped</th><td>no</td><td class="n">0.776</td><td class="n">0.380</td><td class="n">0.960</td></tr>
+    </tbody>
+  </table></div>
+  </details>
+  </figcaption>
+</figure>
+
+<p>A random 80/20 row split (A) would have reported 0.880 and hidden the problem. Grouping by client was not the weak spot. Time was: the W05 model had learned from April outcomes, which nobody has on 31 March.</p>
+
+<h3><span class="num">4.2</span>Three decision days: the model is level with the simple methods</h3>
+
+<figure class="wide">
+  <a href="figures/capstone_fig2_three_decision_days.png"><img src="figures/capstone_fig2_three_decision_days.png" width="1519" height="897" alt="Precision@50 on three decision days for the model, the frozen rule and the slide-only sort, with the random base rate as a dashed line. 31 March: 0.78, 0.78, 0.80, base 0.50. 30 April: 0.99, 0.88, 0.98, base 0.58. 31 May, sealed: 0.94, 0.94, 0.92, base 0.64."></a>
+  <figcaption><span class="swipe">On a phone, swipe the chart sideways or tap it to open it full size.</span><strong>Figure 2. Every method beats a random queue on all three days. On no day is the model clearly ahead.</strong> Dots are the mean of five client folds and lines the lowest to highest fold. The shaded day is the sealed test. The base rate climbs each month, which is part of why the raw numbers climb too.
+  <details><summary>Show the numbers</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Precision@50 (lowest to highest fold)</th><th class="n">31 March</th><th class="n">30 April</th><th class="n">31 May (sealed)</th></tr></thead>
+    <tbody>
+      <tr class="base"><th>random queue (base rate)</th><td class="n">0.503</td><td class="n">0.581</td><td class="n">0.637</td></tr>
+      <tr><th>model (D)</th><td class="n">0.776 (0.38 to 0.96)</td><td class="n">0.988 (0.98 to 1.00)</td><td class="n">0.944 (0.90 to 0.98)</td></tr>
+      <tr><th>frozen rule</th><td class="n">0.784 (0.62 to 0.92)</td><td class="n">0.884 (0.74 to 0.96)</td><td class="n">0.936 (0.90 to 1.00)</td></tr>
+      <tr><th>slide only</th><td class="n">0.800 (0.50 to 0.98)</td><td class="n">0.980 (0.96 to 1.00)</td><td class="n">0.920 (0.84 to 0.98)</td></tr>
+    </tbody>
+  </table></div>
+  </details>
+  </figcaption>
+</figure>
+
+<div class="table-wrap">
+<table>
+  <caption>Table 4. Lift: precision@50 minus the base rate of the same folds.</caption>
+  <thead><tr><th>Method</th><th class="n">31 March</th><th class="n">30 April</th><th class="n">31 May (sealed)</th></tr></thead>
+  <tbody>
+    <tr><th>model (D)</th><td class="n">+0.273</td><td class="n">+0.407</td><td class="n">+0.307</td></tr>
+    <tr><th>frozen rule</th><td class="n">+0.281</td><td class="n">+0.303</td><td class="n">+0.299</td></tr>
+    <tr><th>slide only</th><td class="n">+0.297</td><td class="n">+0.399</td><td class="n">+0.283</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>On the sealed day the model's 0.944 is less than one page in 50 ahead of the rule's 0.936. Over the three days the model is ahead of the rule twice and of the slide sort twice, never by much. The order changes from month to month. The honest reading is that <strong>all three rank pages that already lost visibility far better than chance, but the model is not reliably better than the simple ones.</strong></p>
+
+<h3><span class="num">4.3</span>The sealed test: all eight expectations held</h3>
+
+<p>These eight results were fixed as pass/fail tests in code before June was read. The first two columns were already known when they were written. The third is the test.</p>
+
+<div class="ledger wide">
+<div class="table-wrap">
+<table>
+  <caption>Table 5. Expectations and whether each one held. Tests are in section 4b of the capstone notebook.</caption>
+  <thead><tr><th class="id" scope="col">#</th><th scope="col">Expectation (and its fixed test)</th><th class="day" scope="col">31 Mar</th><th class="day" scope="col">30 Apr</th><th class="day sealed" scope="col">31 May (sealed)</th></tr></thead>
+  <tbody>
+    <tr><td class="id">H1</td><td>Every ranking beats a random queue<span class="test">rule, slide sort and model all at least 0.10 above the base rate</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H2</td><td>The model is not clearly better than the slide sort<span class="test">model minus slide sort below +0.05</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H3</td><td>The model is at least level with the frozen rule<span class="test">model minus rule at least −0.05</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H4</td><td>The playbook order finds far more lasting click loss<span class="test">first 50 rows: at least 10× the model-only order and 2× the rule</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H5</td><td>Most of the batch stays below its normal level<span class="test">at least 70% of the first 50 rows still under 80% of their normal level next month</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H6</td><td>The previous month separates decay from an ended surge<span class="test">"still below normal": real drops at least 20 points above ended surges</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H7</td><td>The label does not separate them<span class="test">"declined": the two groups within 10 points of each other</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+    <tr><td class="id">H8</td><td>The queue does not forecast new falls<span class="test">model on the strict label within 0.10 of its base rate</span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day"><span class="held">✓<span class="word"> held</span></span></td><td class="day sealed"><span class="held">✓<span class="word"> held</span></span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="ledger-note">8 of 8 held on the sealed month. Two of them (H2 and H8) are expectations that the method is <em>not</em> better than something: the sealed month confirmed the limits as well as the strengths.</p>
+</div>
+
+<h3><span class="num">4.4</span>Where the value of a batch comes from</h3>
+
+<figure class="wide">
+  <a href="figures/capstone_fig3_batch_value.png"><img src="figures/capstone_fig3_batch_value.png" width="1577" height="857" alt="Grouped bar chart of clicks a day still lost next month in the first 50 rows, for four orders on three decision days. Playbook 553, 527, 695. Clicks only 546, 585, 757. Frozen rule 46, 105, 140. Model only 2, 2, 38."></a>
+  <figcaption><span class="swipe">On a phone, swipe the chart sideways or tap it to open it full size.</span><strong>Figure 3. Ordering by clicks at stake is what makes 50 reviews matter. The model on its own finds almost no lasting click loss.</strong> Each bar is the sum, over the first 50 rows of one order, of the clicks a day each page was still missing a month later against its own normal month.
+  <details><summary>Show the numbers</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>First 50 rows</th><th class="n">31 March</th><th class="n">30 April</th><th class="n">31 May (sealed)</th></tr></thead>
+    <tbody>
+      <tr><th>playbook: clicks a day still lost / still below normal</th><td class="n">553 / 88%</td><td class="n">527 / 98%</td><td class="n">695 / 94%</td></tr>
+      <tr><th>clicks only</th><td class="n">546 / 76%</td><td class="n">585 / 94%</td><td class="n">757 / 94%</td></tr>
+      <tr><th>frozen rule</th><td class="n">46 / 82%</td><td class="n">105 / 90%</td><td class="n">140 / 82%</td></tr>
+      <tr><th>model only (rows with no click this month)</th><td class="n">2 (52%)</td><td class="n">2 (66%)</td><td class="n">38 (30%)</td></tr>
+    </tbody>
+  </table></div>
+  </details>
+  </figcaption>
+</figure>
+
+<p>On 31 May the playbook's first 50 rows held <strong>695 clicks a day that were still lost in June</strong>, against 38 for the model-only order and 140 for the frozen rule. Of its rows, 94% were still below their normal level a month later. The model alone fills its top 50 with small pages that are easy to label as "declined" but hold almost no visits.</p>
+
+<p><strong>One result did not go the playbook's way.</strong> A plain clicks-at-stake order with no model held more lost clicks on the sealed day (757 vs 695) with the same persistence (94%). Over the three days the clicks-only order found more lasting click loss twice and a little less once (546 vs 553 on 31 March). The model weight added persistence on 31 March (+12 points) and 30 April (+4) and nothing in June. So <strong>the clicks at stake carry the value of the batch. The model weight is a small extra that has not clearly earned its place.</strong></p>
+
+<p>The batch is also concentrated: on 31 May it was 50 of 38,055 rows that need a person (0.13%) but held 8.5% of all their clicks at stake.</p>
+
+<h3><span class="num">4.5</span>Decay or an ended surge? The label can't tell, the page's own history can</h3>
+
+<figure class="wide">
+  <a href="figures/capstone_fig4_decay_vs_surge.png"><img src="figures/capstone_fig4_decay_vs_surge.png" width="1577" height="977" alt="Bar chart comparing two kinds of pages that slid inside the month, on three decision days. The share labeled declined is about the same for both kinds (72% vs 71%, 75% vs 66%, 81% vs 82%). The share still below normal next month is much higher for real drops (84% vs 41%, 91% vs 37%, 94% vs 65%)."></a>
+  <figcaption><span class="swipe">On a phone, swipe the chart sideways or tap it to open it full size.</span><strong>Figure 4. The label scores an ended surge like a real drop. The page's previous month tells them apart on every day.</strong> "Slid, below normal": the page fell inside the month and sits under 80% of its previous month. "Slid, surge ended": it fell inside the month but is back at its previous level. Review pool pages, next month in hindsight.
+  <details><summary>Show the numbers</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Kind of page</th><th class="n">Pages</th><th class="n">Declined (label)</th><th class="n">Still below normal next month</th></tr></thead>
+    <tbody>
+      <tr><th>31 March: slid, below normal</th><td class="n">8,741</td><td class="n">72%</td><td class="n">84%</td></tr>
+      <tr><th>31 March: slid, surge ended</th><td class="n">8,373</td><td class="n">71%</td><td class="n">41%</td></tr>
+      <tr><th>30 April: slid, below normal</th><td class="n">24,005</td><td class="n">75%</td><td class="n">91%</td></tr>
+      <tr><th>30 April: slid, surge ended</th><td class="n">8,510</td><td class="n">66%</td><td class="n">37%</td></tr>
+      <tr><th>31 May: slid, below normal</th><td class="n">18,466</td><td class="n">81%</td><td class="n">94%</td></tr>
+      <tr><th>31 May: slid, surge ended</th><td class="n">4,716</td><td class="n">82%</td><td class="n">65%</td></tr>
+    </tbody>
+  </table></div>
+  </details>
+  </figcaption>
+</figure>
+
+<p>This is the finding that shaped the playbook. Real drops below a page's normal level mostly do not fix themselves within a month, so they go to a person. Surges that ended look the same to the label, so they go to <code>monitor_only</code> and nobody edits them. On the sealed day the gap was smaller (28 points against 43 and 54) because in June far more pages of every kind ended below normal, including 47.7% of the steady pages (27.2% and 28.4% before). That fits the June note below.</p>
+
+<h3><span class="num">4.6</span>What the model leans on and where it goes wrong</h3>
+<ul>
+  <li><strong>The slide carries it.</strong> The share of the month's impressions that came in the second half has the largest weight in the W05 model and dropping it costs the most precision (0.884 to 0.652). Click-through rate comes second. These two keep the same sign in every month and they are the two signals the W04 audit confirmed in two month pairs. Volume and position change sign between months (W06).</li>
+  <li><strong>False alarms are mostly young pages with a short dip</strong> that came back the next month (W05, W06). That is why young pages wait a month in the playbook.</li>
+  <li><strong>Misses are mostly pages that grew inside the month and fell the next one</strong>, often a spike ending. Nothing in the month shows that coming.</li>
+  <li><strong>On the strict label the model sits at the base rate</strong> on all three days: 0.496 vs 0.508, 0.480 vs 0.509 and 0.628 vs 0.642. It finds pages that already lost visibility. It does not see a new fall coming.</li>
+</ul>
+
+<p><strong>A note on June.</strong> June is the last month of the release. Across the whole partition it had about 15% fewer impressions a day than May and about 8% fewer page-days with search data, while clicks a day were higher than in May. The newest week of June was only a little lower than the rest of the month (0.806 vs 0.849 of the May level), so this does not look like missing days at the end of the export. It looks like a drop across the whole portfolio that I cannot explain from this data. It raises June's base rate, so part of every June "decline" is this broad shift. 3,293 of the 106,609 pages (3.1%) had no full June and were left out of the scoring. None of them was in the first batch.</p>
+
+<h2 id="limitations"><span class="num">5</span>Limitations and honest framing</h2>
+<ol>
+  <li><strong>Nothing here is causal.</strong> The queue points at visits that were lost and stayed lost. No refresh was run, so nothing shows that a refresh, a new title or any other change would bring them back.</li>
+  <li><strong>Three decision days, one of them clean.</strong> March and April were used to build the playbook, so only June is an untouched check. A rolling test over more months is the most useful missing experiment.</li>
+  <li><strong>The label is a proxy and partly restates the month.</strong> "Declined" compares next month with this month's average, so a page that fell late in the month and stayed down counts as a hit. On the strict label the model is at the base rate.</li>
+  <li><strong>June had a portfolio-wide drop</strong> that I can't explain from this data (section 4.6).</li>
+  <li><strong>One month is a short normal level.</strong> If the previous month was itself unusual, "below normal" is wrong for that page.</li>
+  <li><strong>Coverage.</strong> The frames hold 38 to 45 of the 104 clients. Pages under the volume floor, young pages and clients without a full previous month are not judged, so absence from the queue is not a sign of health.</li>
+  <li><strong>Concentration.</strong> Three clients hold 49.4% of the 31 May pages and one client holds 32% of its batch, so every number leans on a few sites.</li>
+  <li><strong>Survivorship.</strong> The frame keeps pages with a row on every day. Pages that vanished are not in it.</li>
+  <li><strong>The model score is not calibrated.</strong> Its mean on the 31 May pool was 0.486 while 64.1% of the pool declined. It is only used to order rows.</li>
+</ol>
+
+<div class="table-wrap wide">
+<table>
+  <caption>Table 6. What the evidence supports and what it does not.</caption>
+  <thead><tr><th>Safe to say</th><th>Not supported</th></tr></thead>
+  <tbody>
+    <tr><td>Measured on held-out clients and a sealed month, the playbook's first 50 rows held 527 to 695 clicks a day that were still lost a month later.</td><td>Reviewing or refreshing these pages will win those clicks back.</td></tr>
+    <tr><td>The model, the frozen rule and a slide sort all ranked pages that went on to carry the label far above the base rate.</td><td>The model predicts which pages will decline.</td></tr>
+    <tr><td>Pages that slid below their own normal level were observed to stay below it more often than pages whose surge ended.</td><td>Decay causes the drop, or pages decay because of their age.</td></tr>
+    <tr><td>The queue is decision support for choosing what to look at first.</td><td>The queue can decide what to change, or rank writers, teams or clients.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="recommendations"><span class="num">6</span>Ranked recommendations</h2>
+<p>What a content team should do each month, in this order:</p>
+<ol>
+  <li><strong>Rebuild the queue a few days after month end</strong> and take the first 50 rows that need a person. The batch is small on purpose: on 31 May it was 0.13% of the rows that need a person but held 8.5% of their clicks at stake (section 4.4).</li>
+  <li><strong>Start with the site checks.</strong> When a whole client is down 20% or more against last month, open one ticket per client before touching single pages. On 31 May, 22 of the 50 rows came from 4 such clients: 4 site checks, not 22 page reviews.</li>
+  <li><strong>Then the <code>review_for_refresh</code> rows.</strong> The page slid inside the month and sits below its own normal level. Go through the review questions below, write down what is out of date or missing and only then plan a change.</li>
+  <li><strong>Then the <code>investigate_quiet_risk</code> rows.</strong> Clicks fell against last month without a slide. Check the title, the snippet and the results page first, because the impressions may have held while the clicks fell.</li>
+  <li><strong>Check tracking and campaigns first for <code>verify_then_review</code> rows</strong>, where one day holds 30% or more of the first half.</li>
+  <li><strong>Leave <code>monitor_only</code> pages alone.</strong> Their slide was a surge ending and they are back at their normal level.</li>
+  <li><strong>Wait on young pages</strong> until they have a full month of history. Short dips on new pages caused most false alarms.</li>
+  <li><strong>Keep the order simple.</strong> Order by the clicks a page lost against its own previous month. Keep the model weight only while the monthly check shows it adding something over the clicks-only order. Over three months it did not clearly do so.</li>
+  <li><strong>Never automate the change.</strong> No automatic rewrite, prune, redirect, noindex or bulk title edit from this queue. These are hard to undo and young pages often come back.</li>
+  <li><strong>Log every decision and test refreshes properly.</strong> Record accept or reject, why, what changed and the date. Then refresh part of a batch, leave comparable pages alone and compare them 30, 60 and 90 days later. That is the only way to learn what a refresh does.</li>
+</ol>
+
+<p><strong>Intended use</strong>, in the spirit of a model card [2]: a monthly list for a content reviewer or SEO lead who plans about 50 reviews across clients. A person makes every decision. It is not for forecasting new drops, promising a recovery, client reports or ranking writers, teams or clients.</p>
+
+<p><strong>The five review questions</strong> for every row: (1) is this a real drop below the page's normal level or one big day, on the daily chart? (2) did a season, a campaign or a site change cause it? (3) does the page still match what people search for? (4) is the client changing things right now (a migration, a redesign, new pages)? (5) did a sibling page gain what this one lost?</p>
+
+<div class="table-wrap wide">
+<table>
+  <caption>Table 7. The 31 May playbook: every page in the frame gets one action.</caption>
+  <thead><tr><th>Action</th><th class="n">Pages</th><th class="n">Share</th><th class="n">In the first batch</th></tr></thead>
+  <tbody>
+    <tr><th><code>site_check_first</code></th><td class="n">14,596</td><td class="n">13.7%</td><td class="n">22</td></tr>
+    <tr><th><code>review_for_refresh</code></th><td class="n">10,319</td><td class="n">9.7%</td><td class="n">12</td></tr>
+    <tr><th><code>investigate_quiet_risk</code></th><td class="n">12,701</td><td class="n">11.9%</td><td class="n">10</td></tr>
+    <tr><th><code>verify_then_review</code></th><td class="n">439</td><td class="n">0.4%</td><td class="n">6</td></tr>
+    <tr><th><code>monitor_only</code></th><td class="n">4,853</td><td class="n">4.6%</td><td class="n">0</td></tr>
+    <tr><th><code>no_action</code></th><td class="n">35,583</td><td class="n">33.4%</td><td class="n">0</td></tr>
+    <tr><th><code>wait_and_recheck</code></th><td class="n">11,703</td><td class="n">11.0%</td><td class="n">0</td></tr>
+    <tr><th><code>not_in_review_pool</code></th><td class="n">16,415</td><td class="n">15.4%</td><td class="n">0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>What a reviewer gets for one row, here the first row of the 31 May batch (client shown by rank only):</p>
+<div class="card wide">Queue rank 1, client rank 5, action: investigate_quiet_risk
+Reason (frozen rule): NO_FLAG. Context: below_normal_level, clicks_down
+Model score 0.460 (an ordering score, not a probability). Clicks at stake 107.2 a day
+Impressions a day: April 26,645. 1 to 15 May 17,656. 16 to 31 May 20,668 (78% of normal)
+Clicks a day: April 247.8. 16 to 31 May 140.6. CTR 0.70% at position 2.3</div>
+<p>The frozen rule did not fire for this page because it did not slide inside May, so a rule-only queue would not have shown it. Its clicks against its own April are what put it first.</p>
+
+<h2 id="reproducibility"><span class="num">7</span>Reproducibility</h2>
+
+<p>Everything is in the <a href="https://github.com/nishankchandoliya/flyrank-ml-internship">public repository</a>. Each week is one notebook that writes a small receipt (a JSON file with no page or client ids). The capstone notebook reads those receipts, re-runs the pipeline, reproduces the W06 and W07 numbers exactly and writes every figure on this page.</p>
+
+<div class="table-wrap wide">
+<table>
+  <caption>Table 8. The notebooks behind this paper.</caption>
+  <thead><tr><th>Notebook</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w03_data_contract.ipynb">W03 data contract</a></th><td>unit, windows, five features, three verification queries, the leak trap</td></tr>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w04_baseline_score.ipynb">W04 baseline</a> and <a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w04_signal_audit.ipynb">signal audit</a></th><td>the frozen rule, its queue and the signal verdicts</td></tr>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w05_model.ipynb">W05 model</a></th><td>logistic regression and gradient boosting against the rule, error analysis</td></tr>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w06_validation_audit.ipynb">W06 validation audit</a></th><td>designs A to D, a second month pair, the leakage audit, the strict label</td></tr>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/w07_action_playbook.ipynb">W07 action playbook</a></th><td>gates, the order, the decay table, the value of a batch, monitoring</td></tr>
+    <tr><th><a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb">Capstone</a></th><td>this paper: the reproduction check, the sealed June test and every figure</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>How to rerun it.</strong> Request access to the gated release on Hugging Face (approval is instant), then:</p>
+<pre><code>git clone https://github.com/nishankchandoliya/flyrank-ml-internship.git
+cd flyrank-ml-internship
+pip install -r requirements.txt jupyter ipywidgets
+export HF_TOKEN=...   # your Hugging Face READ token
+cd work/notebooks
+jupyter nbconvert --to notebook --execute --inplace capstone.ipynb</code></pre>
+<p>The capstone notebook needs the committed receipts in <code>work/outputs/</code>. The W03 to W07 notebooks regenerate them the same way. In Colab, save the token as a Secret named <code>HF_TOKEN</code> instead.</p>
+
+<div class="table-wrap wide">
+<table>
+  <caption>Table 9. A reproducibility checklist, after Pineau et al. [1]</caption>
+  <thead><tr><th>Item</th><th>Here</th></tr></thead>
+  <tbody>
+    <tr><th>Data: statistics, splits, exclusions</th><td>Section 2 and Table 1. Five client folds (<code>GroupKFold</code> on the client id) plus time-aware training. Exclusions listed with reasons.</td></tr>
+    <tr><th>Data: where to get it</th><td><code>FlyRank/internship-warehouse</code> on Hugging Face (gated), build v20260703</td></tr>
+    <tr><th>Model and assumptions</th><td>Sections 3.1 to 3.6. Logistic regression with standard scaling, <code>max_iter=1000</code>, all other settings default</td></tr>
+    <tr><th>Hyperparameters</th><td>None tuned. Every cut (20% slide, 5 impressions a day, 80% of normal, 30% one-day share, 100 impressions a month, batch of 50) was fixed in an earlier week</td></tr>
+    <tr><th>Runs and randomness</th><td>One run per decision day and method. No random step: ties are broken by page id, so a rerun gives the same tables. Seed 42 where a library asks for one</td></tr>
+    <tr><th>Measures</th><td>Precision@K inside each client fold, mean of five folds with the lowest and highest fold. Clicks a day still lost next month, defined in section 3.2</td></tr>
+    <tr><th>Code and dependencies</th><td><code>requirements.txt</code>. Run with Python 3.13.17, scikit-learn 1.9.1, pandas 3.0.5, numpy 2.5.3, duckdb 2.0.0, matplotlib 3.11.2</td></tr>
+    <tr><th>Compute and runtime</th><td>A normal CPU, no GPU. The capstone notebook takes about two minutes, most of it reading five monthly partitions over the network</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="acknowledgments"><span class="num">8</span>Acknowledgments and data credit</h2>
+<p>Built on the FlyRank ML Internship dataset (<a href="https://flyrank.ai">flyrank.ai</a>). FlyRank pseudonymized the data and released it to interns through a gated Hugging Face dataset. The data stays in that release. This page shows no client names, page ids or search queries.</p>
+<p>Thanks to the FlyRank mentors and the live sessions of the internship. The data contract, the leak traps, the time-aware audit and the playbook all started from their questions. FlyRank's March 2026 report <em>The State of AI-Driven SEO in Numbers</em> [3], which ships with the internship repository, was the starting point for the methodology questions in W06.</p>
+
+<h3>References</h3>
+<ol class="refs">
+  <li>Pineau, J. et al. (2021). Improving reproducibility in machine learning research (a report from the NeurIPS 2019 reproducibility program). <em>Journal of Machine Learning Research</em> 22. <a href="https://jmlr.org/papers/v22/20-303.html">jmlr.org/papers/v22/20-303.html</a>. Checklist: <a href="https://www.cs.mcgill.ca/~jpineau/ReproducibilityChecklist.pdf">ReproducibilityChecklist.pdf</a></li>
+  <li>Mitchell, M. et al. (2019). Model cards for model reporting. <em>Proceedings of FAT* 2019</em>. <a href="https://research.google/pubs/model-cards-for-model-reporting/">research.google</a></li>
+  <li>FlyRank (2026). <em>The State of AI-Driven SEO in Numbers</em>, March 2026. Included in the repository as <code>docs/flyrank-seo-research-march-2026.pdf</code>.</li>
+</ol>
+
+</main>
+
+<footer>
+  <p>Built on the FlyRank ML Internship dataset (<a href="https://flyrank.ai">flyrank.ai</a>). Written by Nishank Chandoliya as the capstone of the FlyRank ML internship.</p>
+  <p>Every number and figure on this page comes from <a href="https://github.com/nishankchandoliya/flyrank-ml-internship/blob/main/work/notebooks/capstone.ipynb">work/notebooks/capstone.ipynb</a> and its receipt <code>work/outputs/capstone_metrics.json</code>.</p>
+</footer>
+
+<script>
+  // Mark the section in view in the contents list. The page works the same without it
+  (function () {
+    var links = [].slice.call(document.querySelectorAll('.toc a'));
+    var targets = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+    if (!links.length) return;
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var line = window.innerHeight * 0.3, current = -1;
+      targets.forEach(function (el, i) { if (el && el.getBoundingClientRect().top <= line) current = i; });
+      links.forEach(function (a, i) { if (i === current) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
+  })();
+</script>
+</body>
+</html>
