@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Which pages should a content reviewer look at first? A monthly review queue tested on a sealed month</title>
-<meta name="description" content="A research paper from the FlyRank ML internship: building and honestly testing a monthly review queue that puts pages with lasting search visit losses in front of a content reviewer, checked on a sealed month of Google Search Console data.">
+<meta name="description" content="A case study from the FlyRank ML internship: can a trained model pick the pages a content reviewer should look at first better than a hand-written rule? A monthly review queue built on Google Search Console data and checked on a sealed month.">
 <meta name="author" content="Nishank Chandoliya">
 <link rel="canonical" href="https://nishankchandoliya.github.io/flyrank-ml-internship/">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Which pages should a content reviewer look at first?">
-<meta property="og:description" content="A monthly review queue built on FlyRank's pseudonymized search data, tested on client folds, time-aware training and one sealed month.">
+<meta property="og:description" content="A case study on FlyRank's search data: can a trained model pick the pages to review better than a hand-written rule? Tested on held-out clients, with time-aware training and one sealed month.">
 <meta property="og:url" content="https://nishankchandoliya.github.io/flyrank-ml-internship/">
 <meta property="og:image" content="https://nishankchandoliya.github.io/flyrank-ml-internship/figures/capstone_fig2_three_decision_days.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -175,7 +175,7 @@
 <a class="skip" href="#abstract">Skip to the abstract</a>
 
 <header>
-  <p class="kicker">FlyRank ML internship capstone, Lane 2: Refresh / Content Opportunity Scoring</p>
+  <p class="kicker">Case study from the FlyRank ML internship, Lane 2: Refresh / Content Opportunity Scoring</p>
   <h1>Which pages should a content reviewer look at first?</h1>
   <p class="subtitle">A monthly review queue built on FlyRank's search data, tested on clients it never saw, with time-aware training and one sealed month read only after the expected results were written down.</p>
   <dl class="byline">
@@ -190,7 +190,7 @@
 
 <section class="abstract" id="abstract" aria-labelledby="abstract-h">
   <h2 id="abstract-h">Abstract</h2>
-  <p>A content reviewer at FlyRank has time for about 50 pages a month, so this paper asks which pages they should look at first. I used FlyRank's pseudonymized warehouse release of Google Search Console data (78.8 million daily rows) and built one row per page per month for 94,496 to 106,609 pages from 38 to 45 client sites, with decision days at the end of March, April and May 2026. A frozen hand rule, a logistic regression and a plain sort by the drop inside the month were compared on held-out clients with training only on the past and an action playbook ordered the pages that need a person by the clicks they lost against their own previous month. On the sealed month (decided on 31 May, read once after eight expected results were fixed in code) all eight held: the model's precision@50 was 0.944 against 0.936 for the rule, 0.920 for the drop sort and a base rate of 0.637; the playbook's first 50 rows held 695 clicks a day that were still lost a month later, against 38 for the model alone. The queue is decision support for finding visits that were already lost and stayed lost: it does not forecast new drops, it does not show that a refresh would bring traffic back and the model is level with the simple methods rather than ahead of them.</p>
+  <p>FlyRank publishes content on its clients' websites and tracks how each page does in Google search, where some pages slowly lose clicks. This case study asks which pages a reviewer with time for about 50 a month should look at first and whether a trained model picks them better than the kind of hand-written rule FlyRank's app uses to flag pages today. I used FlyRank's pseudonymized warehouse release of Google Search Console data (78.8 million daily rows) and built one row per page per month for 94,496 to 106,609 pages from 38 to 45 client sites, with decision days at the end of March, April and May 2026. A frozen hand rule, a logistic regression and a plain sort by the drop inside the month were compared on held-out clients with training only on the past and an action playbook ordered the pages that need a person by the clicks they lost against their own previous month. On the sealed month (decided on 31 May, read once after eight expected results were fixed in code) all eight held: the model's precision@50 was 0.944 against 0.936 for the rule, 0.920 for the drop sort and a base rate of 0.637; the playbook's first 50 rows held 695 clicks a day that were still lost a month later, against 38 for the model alone. So for FlyRank's question the model was level with a simple rule, not better than it. Most of a batch's value came from ordering pages by the clicks they lost. The queue is decision support for finding visits that were already lost and stayed lost: it does not forecast new drops and it does not show that a refresh would bring traffic back.</p>
 </section>
 
 <nav class="toc" aria-label="Contents">
@@ -209,7 +209,17 @@
 
 <h2 id="introduction"><span class="num">1</span>Introduction and problem statement</h2>
 
-<p>On the last day of May a reviewer opens a list of about 100,000 pages from 45 client sites. They can check about 50. Some pages lost visits and will stay down. Some only look down because a spike early in the month ended. Some are new pages that dipped for a week and will come back. A batch of 50 is about 17 hours of review, so picking the wrong 50 spends that time on pages that did not need it while the real losses wait another month.</p>
+<h3><span class="num">1.1</span>The FlyRank problem behind this case study</h3>
+
+<p>FlyRank writes and publishes content on its clients' websites and then watches how those pages do in Google search. A page can rank well for months and then slowly lose clicks. Across many client sites that adds up to far more pages than anyone can check, so someone has to choose which ones a person looks at first.</p>
+
+<p>Today FlyRank's app makes that kind of choice with hand-written rules: flags and scores built on thresholds that people set by hand. These rules are easy to read and they run in production. They get harder to set well when many signals move at the same time. My internship lane, Refresh / Content Opportunity Scoring, starts from that gap: <strong>can a model trained on the search data pick the pages to review better than a rule?</strong></p>
+
+<p>FlyRank's own flags and scores are not in the data release, on purpose, so a model cannot simply copy them. This also means the paper does not test FlyRank's production rules. The rule it tests is one I wrote in W04 in the same if-this-then-that style and froze before any model was trained (section 3.4).</p>
+
+<h3><span class="num">1.2</span>The decision</h3>
+
+<p>On the last day of May a reviewer opens a list of about 100,000 pages from 45 client sites. Say they can check about 50 (an assumption, section 3.1). Some pages lost visits and will stay down. Some only look down because a spike early in the month ended. Some are new pages that dipped for a week and will come back. A batch of 50 is about 17 hours of review, so picking the wrong 50 spends that time on pages that did not need it while the real losses wait another month.</p>
 
 <p>So the decision this work supports is narrow: <strong>which pages a person reviews first each month and which check to start with.</strong> The output is a ranked queue with an action and a reason for every page. A person makes every decision. Nothing is changed on a site automatically.</p>
 
@@ -227,7 +237,17 @@
   <li>A sealed test: the queue for 31 May was built without June, eight expected results were fixed in code and only then was June read, once.</li>
 </ol>
 
-<p>What this paper does not do: it does not predict what Google will do, it does not forecast which pages will start to fall and it does not measure whether a refresh brings traffic back. Section 5 explains each of these limits.</p>
+<h3><span class="num">1.3</span>What this case study tells FlyRank</h3>
+
+<p>Tied back to the question in section 1.1, the results say four things. Each one is measured on clients the model never saw and the last decision day is a month that stayed sealed until the end.</p>
+<ol>
+  <li><strong>A trained model was not reliably better than simple methods at picking pages.</strong> Over the three decision days the model's precision@50 was 0.776, 0.988 and 0.944, the frozen rule's 0.784, 0.884 and 0.936 and a plain slide sort's 0.800, 0.980 and 0.920. On no day was the model more than one page in 50 ahead of the best simple method (section 4.2).</li>
+  <li><strong>The order made 50 reviews count, not the model.</strong> The playbook orders the pages that need a person by the clicks they lost against their own previous month, weighted by the model score. Its first 50 rows held 527 to 695 clicks a day that were still lost a month later. The model's own order found 2 to 38. A clicks-only order with no model found more in two of the three months and a little less in the third (section 4.4).</li>
+  <li><strong>A page's own normal level tells a real drop from a surge that ended.</strong> A month-over-month label scored both kinds about the same (81% and 82% "declined" on 31 May). The previous month separated them: 94% of the pages that slid below their normal level were still below it a month later, against 65% of the pages whose surge ended. The gap held on all three days. This suggests that a flag built on a monthly drop should also compare the page with its own normal level (section 4.5).</li>
+  <li><strong>Some drops belong to the whole site, not to one page.</strong> On 31 May, 22 of the first 50 rows came from 4 clients whose whole site was more than 20% below its previous month in the second half of May. That is 4 site checks, not 22 page reviews (section 6).</li>
+</ol>
+
+<p>What this paper does not do: it does not predict what Google will do, it does not forecast which pages will start to fall and it does not measure whether a refresh brings traffic back. Section 5 explains each of these limits. The last one is the open question for FlyRank and recommendation 10 describes the test that would answer it.</p>
 
 <h2 id="data"><span class="num">2</span>Data</h2>
 
